@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import '../models/weather_model.dart';
@@ -6,7 +7,7 @@ import '../models/forecast_model.dart';
 import '../models/alert_model.dart';
 
 class ApiOpenWeatherMap {
-  static const String _apiKey = '';
+  static final String _apiKey = dotenv.env['OPENWEATHERAPIKEY'] ?? '';
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
 
   // Obtener clima actual y pronóstico por ciudad para asegurar consistencia
