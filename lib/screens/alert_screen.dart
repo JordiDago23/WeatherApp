@@ -42,7 +42,7 @@ class AlertScreen extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        alert.event,
+                        alert.evento,
                         style: theme.textTheme.headlineSmall,
                       ),
                     ),
@@ -69,11 +69,17 @@ class AlertScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            DateFormat('dd/MM/yyyy', 'es').format(alert.start),
+                            DateFormat(
+                              'dd/MM/yyyy',
+                              'es',
+                            ).format(DateTime.parse(alert.inicio)),
                             style: theme.textTheme.bodyMedium,
                           ),
                           Text(
-                            DateFormat('HH:mm', 'es').format(alert.start),
+                            DateFormat(
+                              'HH:mm',
+                              'es',
+                            ).format(DateTime.parse(alert.inicio)),
                             style: theme.textTheme.bodyMedium,
                           ),
                         ],
@@ -88,11 +94,17 @@ class AlertScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            DateFormat('dd/MM/yyyy', 'es').format(alert.end),
+                            DateFormat(
+                              'dd/MM/yyyy',
+                              'es',
+                            ).format(DateTime.parse(alert.fin)),
                             style: theme.textTheme.bodyMedium,
                           ),
                           Text(
-                            DateFormat('HH:mm', 'es').format(alert.end),
+                            DateFormat(
+                              'HH:mm',
+                              'es',
+                            ).format(DateTime.parse(alert.fin)),
                             style: theme.textTheme.bodyMedium,
                           ),
                         ],
@@ -109,7 +121,7 @@ class AlertScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    alert.description,
+                    alert.descripcion,
                     style: theme.textTheme.bodyLarge,
                   ),
                 ),

@@ -16,36 +16,36 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _EstadoHomeScreen();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final ApiService _apiService = ApiService();
-  final StorageService _storageService = StorageService();
+class _EstadoHomeScreen extends State<HomeScreen> {
+  final ServicioApi _servicioApi = ServicioApi();
+  final StorageService _servicioAlmacenamiento = StorageService();
 
-  Weather? _currentWeather;
-  List<Forecast> _forecasts = [];
-  List<WeatherAlert> _alerts = [];
-  List<City> _recentCities = [];
+  Weather? _climaActual;
+  List<Forecast> _pronosticos = [];
+  List<WeatherAlert> _alertas = [];
+  List<City> _ciudadesRecientes = [];
 
-  bool _isLoading = false;
+  bool _estaCargando = false;
   String _error = '';
 
   @override
   void initState() {
     super.initState();
-    _loadRecentCities();
-    _getCurrentLocationWeather();
+    _cargarCiudadesRecientes();
+    _obtenerClimaUbicacionActual();
   }
 
-  void _showTestAlert() {
-    final testAlert = WeatherAlert.createTestAlert();
+  void _mostrarAlertaPrueba() {
+    final alertaPrueba = WeatherAlert.createTestAlert();
 
     Navigator.of(context).push(
       MaterialPageRoute(
         builder:
             (context) => AlertScreen(
-              alert: testAlert,
+              alert: alertaPrueba,
               onClose: () {
                 Navigator.of(context).pop();
               },
@@ -54,83 +54,83 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _loadRecentCities() async {
+  Future<void> _cargarCiudadesRecientes() async {
     try {
-      final cities = await _storageService.getRecentCities();
+      final ciudades = await _servicioAlmacenamiento.getRecentCities();
       setState(() {
-        _recentCities = cities;
+        _ciudadesRecientes = ciudades;
       });
     } catch (e) {
       setState(() {
-        _recentCities = [];
+        _ciudadesRecientes = [];
       });
     }
   }
 
-  Future<void> _getCurrentLocationWeather() async {
+  Future<void> _obtenerClimaUbicacionActual() async {
     setState(() {
-      _isLoading = true;
+      _estaCargando = true;
       _error = '';
     });
 
     try {
-      final position = await _apiService.getCurrentLocation();
+      final posicion = await _servicioApi.obtenerUbicacionActual();
 
-      final weather = await _apiService.getWeatherByLocation(
-        position.latitude,
-        position.longitude,
+      final clima = await _servicioApi.obtenerClimaPorUbicacion(
+        posicion.latitude,
+        posicion.longitude,
       );
 
-      final forecasts = await _apiService.getForecastByLocation(
-        position.latitude,
-        position.longitude,
+      final pronosticos = await _servicioApi.obtenerPronosticoPorUbicacion(
+        posicion.latitude,
+        posicion.longitude,
       );
 
-      final alerts = await _apiService.getWeatherAlerts(
-        position.latitude,
-        position.longitude,
+      final alertas = await _servicioApi.obtenerAlertasMeteorologicas(
+        posicion.latitude,
+        posicion.longitude,
       );
 
       setState(() {
-        _currentWeather = weather;
-        _forecasts = forecasts;
-        _alerts = alerts;
-        _isLoading = false;
+        _climaActual = clima;
+        _pronosticos = pronosticos;
+        _alertas = alertas;
+        _estaCargando = false;
       });
 
-      await _storageService.addRecentCity(weather.cityName);
-      await _loadRecentCities();
+      await _servicioAlmacenamiento.addRecentCity(clima.cityName);
+      await _cargarCiudadesRecientes();
     } catch (e) {
       setState(() {
         _error = 'Error al obtener datos del clima: $e';
-        _isLoading = false;
+        _estaCargando = false;
       });
     }
   }
 
-  Future<void> _getCityWeather(String city) async {
+  Future<void> _obtenerClimaCiudad(String ciudad) async {
     setState(() {
-      _isLoading = true;
+      _estaCargando = true;
       _error = '';
     });
 
     try {
-      final weather = await _apiService.getWeatherByCity(city);
+      final clima = await _servicioApi.obtenerClimaPorCiudad(ciudad);
 
-      final forecasts = await _apiService.getForecastByCity(city);
+      final pronosticos = await _servicioApi.obtenerPronosticoPorCiudad(ciudad);
 
       setState(() {
-        _currentWeather = weather;
-        _forecasts = forecasts;
-        _isLoading = false;
+        _climaActual = clima;
+        _pronosticos = pronosticos;
+        _estaCargando = false;
       });
 
-      await _storageService.addRecentCity(city);
-      await _loadRecentCities();
+      await _servicioAlmacenamiento.addRecentCity(ciudad);
+      await _cargarCiudadesRecientes();
     } catch (e) {
       setState(() {
         _error = 'Error al obtener datos del clima: $e';
-        _isLoading = false;
+        _estaCargando = false;
       });
     }
   }
@@ -146,12 +146,12 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.warning_amber_rounded),
             tooltip: 'Probar alerta',
-            onPressed: _showTestAlert,
+            onPressed: _mostrarAlertaPrueba,
           ),
           IconButton(
             icon: const Icon(Icons.my_location),
             tooltip: 'Mi ubicación',
-            onPressed: _getCurrentLocationWeather,
+            onPressed: _obtenerClimaUbicacionActual,
           ),
         ],
       ),
@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBody(ThemeData theme) {
-    if (_isLoading) {
+    if (_estaCargando) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _getCurrentLocationWeather,
+              onPressed: _obtenerClimaUbicacionActual,
               child: const Text('Reintentar'),
             ),
           ],
@@ -191,10 +191,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: CitySearch(onCitySelected: _getCityWeather),
+            child: CitySearch(onCitySelected: _obtenerClimaCiudad),
           ),
 
-          if (_recentCities.isNotEmpty) ...[
+          if (_ciudadesRecientes.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Align(
@@ -211,16 +211,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _recentCities.length,
+                  itemCount: _ciudadesRecientes.length,
                   itemBuilder: (context, index) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(
-                        label: Text(_recentCities[index].name),
+                        label: Text(_ciudadesRecientes[index].name),
                         backgroundColor: AppTheme.secondaryColor.withAlpha(50),
                         labelStyle: TextStyle(color: AppTheme.primaryColor),
                         onPressed: () {
-                          _getCityWeather(_recentCities[index].name);
+                          _obtenerClimaCiudad(_ciudadesRecientes[index].name);
                         },
                       ),
                     );
@@ -231,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
 
           const SizedBox(height: 8),
-          if (_currentWeather != null) ...[
+          if (_climaActual != null) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Align(
@@ -244,9 +244,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: WeatherCard(weather: _currentWeather!),
+              child: WeatherCard(weather: _climaActual!),
             ),
-            if (_forecasts.isNotEmpty) ...[
+            if (_pronosticos.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -262,13 +262,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ForecastList(forecasts: _forecasts),
+                child: ForecastList(forecasts: _pronosticos),
               ),
             ],
-            if (_alerts.isNotEmpty)
+            if (_alertas.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: WeatherAlerts(alerts: _alerts),
+                child: WeatherAlerts(alerts: _alertas),
               ),
             const SizedBox(height: 40),
           ],

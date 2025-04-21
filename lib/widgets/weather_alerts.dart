@@ -59,7 +59,7 @@ class AlertCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    alert.event,
+                    alert.evento,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -68,17 +68,17 @@ class AlertCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(alert.description, style: theme.textTheme.bodyMedium),
+            Text(alert.descripcion, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Desde: ${DateFormat('dd/MM HH:mm').format(alert.start)}',
+                  'Desde: ${DateFormat('dd/MM HH:mm').format(DateTime.parse(alert.inicio))}',
                   style: theme.textTheme.bodySmall,
                 ),
                 Text(
-                  'Hasta: ${DateFormat('dd/MM HH:mm').format(alert.end)}',
+                  'Hasta: ${DateFormat('dd/MM HH:mm').format(DateTime.parse(alert.fin))}',
                   style: theme.textTheme.bodySmall,
                 ),
               ],

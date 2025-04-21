@@ -6,152 +6,160 @@ import '../models/weather_model.dart';
 import '../models/forecast_model.dart';
 import '../models/alert_model.dart';
 
-class ApiService {
-  // Obtener la clave API desde el archivo .env
-  static final String _apiKey = dotenv.env['OPENWEATHERAPIKEY'] ?? '';
-  static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
+class ServicioApi {
+  static final String _claveApi = dotenv.env['OPENWEATHERAPIKEY'] ?? '';
+  static const String _urlBase = 'https://api.openweathermap.org/data/2.5';
 
-  // Método unificado para obtener clima y pronóstico por ciudad
-  Future<Map<String, dynamic>> getWeatherAndForecastByCity(String city) async {
-    final response = await http.get(
-      Uri.parse(
-        '$_baseUrl/forecast?q=$city&units=metric&appid=$_apiKey&lang=es',
-      ),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List<dynamic> forecastList = data['list'];
-      final Map<String, dynamic> cityData = data['city'];
-
-      // Obtener pronóstico para 5 días
-      List<Forecast> forecasts = [];
-      String currentDate = "";
-
-      for (var item in forecastList) {
-        String date = item['dt_txt'].toString().split(' ')[0];
-        if (date != currentDate) {
-          currentDate = date;
-          forecasts.add(Forecast.fromJson(item));
-        }
-        if (forecasts.length >= 5) break;
-      }
-
-      // Crear objeto Weather con datos del primer pronóstico
-      final firstForecastData = forecastList[0];
-      final weather = Weather(
-        cityName: cityData['name'],
-        temperature: firstForecastData['main']['temp'].toDouble(),
-        description: firstForecastData['weather'][0]['description'],
-        tempMin: firstForecastData['main']['temp_min'].toDouble(),
-        tempMax: firstForecastData['main']['temp_max'].toDouble(),
-        humidity: firstForecastData['main']['humidity'],
-        windSpeed: firstForecastData['wind']['speed'].toDouble(),
-        icon: firstForecastData['weather'][0]['icon'],
-        date: DateTime.parse(firstForecastData['dt_txt']),
-      );
-
-      return {'weather': weather, 'forecasts': forecasts};
-    } else {
-      throw Exception(
-        'Error al obtener datos meteorológicos: ${response.statusCode}',
-      );
-    }
-  }
-
-  // Método unificado para obtener clima y pronóstico por ubicación
-  Future<Map<String, dynamic>> getWeatherAndForecastByLocation(
-    double lat,
-    double lon,
+  Future<Map<String, dynamic>> obtenerClimaYPronosticoPorCiudad(
+    String ciudad,
   ) async {
-    final response = await http.get(
+    final respuesta = await http.get(
       Uri.parse(
-        '$_baseUrl/forecast?lat=$lat&lon=$lon&units=metric&appid=$_apiKey&lang=es',
+        '$_urlBase/forecast?q=$ciudad&units=metric&appid=$_claveApi&lang=es',
       ),
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List<dynamic> forecastList = data['list'];
-      final Map<String, dynamic> cityData = data['city'];
+    if (respuesta.statusCode == 200) {
+      final datos = jsonDecode(respuesta.body);
+      final List<dynamic> listaPronostico = datos['list'];
+      final Map<String, dynamic> datosCiudad = datos['city'];
 
-      // Obtener pronóstico para 5 días
-      List<Forecast> forecasts = [];
-      String currentDate = "";
+      List<Forecast> pronosticos = [];
+      String fechaActual = "";
 
-      for (var item in forecastList) {
-        String date = item['dt_txt'].toString().split(' ')[0];
-        if (date != currentDate) {
-          currentDate = date;
-          forecasts.add(Forecast.fromJson(item));
+      for (var item in listaPronostico) {
+        String fecha = item['dt_txt'].toString().split(' ')[0];
+        if (fecha != fechaActual) {
+          fechaActual = fecha;
+          pronosticos.add(Forecast.fromJson(item));
         }
-        if (forecasts.length >= 5) break;
+        if (pronosticos.length >= 5) break;
       }
 
-      // Crear objeto Weather con datos del primer pronóstico
-      final firstForecastData = forecastList[0];
-      final weather = Weather(
-        cityName: cityData['name'],
-        temperature: firstForecastData['main']['temp'].toDouble(),
-        description: firstForecastData['weather'][0]['description'],
-        tempMin: firstForecastData['main']['temp_min'].toDouble(),
-        tempMax: firstForecastData['main']['temp_max'].toDouble(),
-        humidity: firstForecastData['main']['humidity'],
-        windSpeed: firstForecastData['wind']['speed'].toDouble(),
-        icon: firstForecastData['weather'][0]['icon'],
-        date: DateTime.parse(firstForecastData['dt_txt']),
+      final datosPronosticoPrimero = listaPronostico[0];
+      final clima = Weather(
+        cityName: datosCiudad['name'],
+        temperature: datosPronosticoPrimero['main']['temp'].toDouble(),
+        description: datosPronosticoPrimero['weather'][0]['description'],
+        tempMin: datosPronosticoPrimero['main']['temp_min'].toDouble(),
+        tempMax: datosPronosticoPrimero['main']['temp_max'].toDouble(),
+        humidity: datosPronosticoPrimero['main']['humidity'],
+        windSpeed: datosPronosticoPrimero['wind']['speed'].toDouble(),
+        icon: datosPronosticoPrimero['weather'][0]['icon'],
+        date: DateTime.parse(datosPronosticoPrimero['dt_txt']),
       );
 
-      return {'weather': weather, 'forecasts': forecasts};
+      return {'weather': clima, 'forecasts': pronosticos};
     } else {
       throw Exception(
-        'Error al obtener datos meteorológicos: ${response.statusCode}',
+        'Error al obtener datos meteorológicos: ${respuesta.statusCode}',
       );
     }
   }
 
-  // Los métodos separados para compatibilidad
-  Future<Weather> getWeatherByCity(String city) async {
-    final result = await getWeatherAndForecastByCity(city);
-    return result['weather'];
+  Future<Map<String, dynamic>> obtenerClimaYPronosticoPorUbicacion(
+    double latitud,
+    double longitud,
+  ) async {
+    final respuesta = await http.get(
+      Uri.parse(
+        '$_urlBase/forecast?lat=$latitud&lon=$longitud&units=metric&appid=$_claveApi&lang=es',
+      ),
+    );
+
+    if (respuesta.statusCode == 200) {
+      final datos = jsonDecode(respuesta.body);
+      final List<dynamic> listaPronostico = datos['list'];
+      final Map<String, dynamic> datosCiudad = datos['city'];
+
+      List<Forecast> pronosticos = [];
+      String fechaActual = "";
+
+      for (var item in listaPronostico) {
+        String fecha = item['dt_txt'].toString().split(' ')[0];
+        if (fecha != fechaActual) {
+          fechaActual = fecha;
+          pronosticos.add(Forecast.fromJson(item));
+        }
+        if (pronosticos.length >= 5) break;
+      }
+
+      final datosPronosticoPrimero = listaPronostico[0];
+      final clima = Weather(
+        cityName: datosCiudad['name'],
+        temperature: datosPronosticoPrimero['main']['temp'].toDouble(),
+        description: datosPronosticoPrimero['weather'][0]['description'],
+        tempMin: datosPronosticoPrimero['main']['temp_min'].toDouble(),
+        tempMax: datosPronosticoPrimero['main']['temp_max'].toDouble(),
+        humidity: datosPronosticoPrimero['main']['humidity'],
+        windSpeed: datosPronosticoPrimero['wind']['speed'].toDouble(),
+        icon: datosPronosticoPrimero['weather'][0]['icon'],
+        date: DateTime.parse(datosPronosticoPrimero['dt_txt']),
+      );
+
+      return {'weather': clima, 'forecasts': pronosticos};
+    } else {
+      throw Exception(
+        'Error al obtener datos meteorológicos: ${respuesta.statusCode}',
+      );
+    }
   }
 
-  Future<List<Forecast>> getForecastByCity(String city) async {
-    final result = await getWeatherAndForecastByCity(city);
-    return result['forecasts'];
+  Future<Weather> obtenerClimaPorCiudad(String ciudad) async {
+    final resultado = await obtenerClimaYPronosticoPorCiudad(ciudad);
+    return resultado['weather'];
   }
 
-  Future<Weather> getWeatherByLocation(double lat, double lon) async {
-    final result = await getWeatherAndForecastByLocation(lat, lon);
-    return result['weather'];
+  Future<List<Forecast>> obtenerPronosticoPorCiudad(String ciudad) async {
+    final resultado = await obtenerClimaYPronosticoPorCiudad(ciudad);
+    return resultado['forecasts'];
   }
 
-  Future<List<Forecast>> getForecastByLocation(double lat, double lon) async {
-    final result = await getWeatherAndForecastByLocation(lat, lon);
-    return result['forecasts'];
+  Future<Weather> obtenerClimaPorUbicacion(
+    double latitud,
+    double longitud,
+  ) async {
+    final resultado = await obtenerClimaYPronosticoPorUbicacion(
+      latitud,
+      longitud,
+    );
+    return resultado['weather'];
   }
 
-  // Obtener alertas meteorológicas
-  Future<List<WeatherAlert>> getWeatherAlerts(double lat, double lon) async {
+  Future<List<Forecast>> obtenerPronosticoPorUbicacion(
+    double latitud,
+    double longitud,
+  ) async {
+    final resultado = await obtenerClimaYPronosticoPorUbicacion(
+      latitud,
+      longitud,
+    );
+    return resultado['forecasts'];
+  }
+
+  Future<List<WeatherAlert>> obtenerAlertasMeteorologicas(
+    double latitud,
+    double longitud,
+  ) async {
     try {
-      final response = await http.get(
+      final respuesta = await http.get(
         Uri.parse(
-          'https://api.openweathermap.org/data/3.0/onecall?lat=$lat&lon=$lon&exclude=current,minutely,hourly,daily&appid=$_apiKey&lang=es',
+          'https://api.openweathermap.org/data/3.0/onecall?lat=$latitud&lon=$longitud&exclude=current,minutely,hourly,daily&appid=$_claveApi&lang=es',
         ),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        List<WeatherAlert> alerts = [];
+      if (respuesta.statusCode == 200) {
+        final datos = jsonDecode(respuesta.body);
+        List<WeatherAlert> alertas = [];
 
-        if (data.containsKey('alerts')) {
-          final List<dynamic> alertsList = data['alerts'];
-          for (var alert in alertsList) {
-            alerts.add(WeatherAlert.fromJson(alert));
+        if (datos.containsKey('alerts')) {
+          final List<dynamic> listaAlertas = datos['alerts'];
+          for (var alerta in listaAlertas) {
+            alertas.add(WeatherAlert.fromJson(alerta));
           }
         }
 
-        return alerts;
+        return alertas;
       } else {
         return [];
       }
@@ -160,23 +168,20 @@ class ApiService {
     }
   }
 
-  // Obtener ubicación actual
-  Future<Position> getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
+  Future<Position> obtenerUbicacionActual() async {
+    bool servicioHabilitado = await Geolocator.isLocationServiceEnabled();
+    if (!servicioHabilitado) {
       throw Exception('Servicios de ubicación desactivados');
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw Exception('Permisos de ubicación denegados');
-      }
+    LocationPermission permiso = await Geolocator.checkPermission();
+    if (permiso == LocationPermission.denied) {
+      permiso = await Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception('Permisos de ubicación permanentemente denegados');
+    if (permiso == LocationPermission.denied ||
+        permiso == LocationPermission.deniedForever) {
+      throw Exception('Permisos de ubicación denegados');
     }
 
     return await Geolocator.getCurrentPosition();

@@ -21,7 +21,6 @@ class Weather {
     required this.date,
   });
 
-  // Método para crear un objeto Weather desde JSON
   factory Weather.fromJson(Map<String, dynamic> json) {
     return Weather(
       cityName: json['name'],

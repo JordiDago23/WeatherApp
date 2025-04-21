@@ -1,33 +1,39 @@
 class WeatherAlert {
-  final String event;
-  final String description;
-  final DateTime start;
-  final DateTime end;
+  final String evento;
+  final String descripcion;
+  final String inicio;
+  final String fin;
+  final String remitente;
+  final String tipo;
 
   WeatherAlert({
-    required this.event,
-    required this.description,
-    required this.start,
-    required this.end,
+    required this.evento,
+    required this.descripcion,
+    required this.inicio,
+    required this.fin,
+    required this.remitente,
+    required this.tipo,
   });
 
-  // Método para crear una alerta desde JSON
   factory WeatherAlert.fromJson(Map<String, dynamic> json) {
     return WeatherAlert(
-      event: json['event'],
-      description: json['description'],
-      start: DateTime.fromMillisecondsSinceEpoch(json['start'] * 1000),
-      end: DateTime.fromMillisecondsSinceEpoch(json['end'] * 1000),
+      evento: json['event'] ?? 'Desconocido',
+      descripcion: json['description'] ?? 'Sin descripción',
+      inicio: json['start']?.toString() ?? 'Desconocido',
+      fin: json['end']?.toString() ?? 'Desconocido',
+      remitente: json['sender_name'] ?? 'Desconocido',
+      tipo: json['tags']?.isNotEmpty == true ? json['tags'][0] : 'Otro',
     );
   }
 
-  // Método para crear una alerta de prueba
   static WeatherAlert createTestAlert() {
     return WeatherAlert(
-      event: 'Alerta de lluvia',
-      description: 'Se esperan lluvias intensas en las próximas horas',
-      start: DateTime.now(),
-      end: DateTime.now().add(const Duration(hours: 6)),
+      evento: 'Alerta de lluvia',
+      descripcion: 'Se esperan lluvias intensas en las próximas horas',
+      inicio: DateTime.now().toString(),
+      fin: DateTime.now().add(const Duration(hours: 6)).toString(),
+      remitente: 'Servicio Meteorológico',
+      tipo: 'Lluvia',
     );
   }
 }
