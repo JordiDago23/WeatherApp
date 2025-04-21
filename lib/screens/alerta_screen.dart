@@ -16,7 +16,7 @@ class AlertaScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alerta Meteorológica'),
-        backgroundColor: AppTheme.errorColor,
+        backgroundColor: AppTheme.alertColor,
         foregroundColor: AppTheme.textColorLight,
         automaticallyImplyLeading: false,
       ),
@@ -29,14 +29,14 @@ class AlertaScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withAlpha(51),
+                  color: AppTheme.alertColor.withAlpha(51),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.warning_amber_rounded,
-                      color: AppTheme.errorColor,
+                      color: AppTheme.alertColor,
                       size: 48,
                     ),
                     const SizedBox(width: 16),
@@ -133,7 +133,7 @@ class AlertaScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onClose,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.errorColor,
+                    backgroundColor: AppTheme.alertColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(

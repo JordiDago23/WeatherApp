@@ -39,13 +39,23 @@ class AlertaMetereologicaCard extends StatelessWidget {
 
   const AlertaMetereologicaCard({super.key, required this.alert});
 
+  String formatDateTime(String dateTimeString) {
+    if (dateTimeString.isEmpty) return "N/A";
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      return DateFormat('dd/MM HH:mm').format(dateTime);
+    } catch (e) {
+      return "Fecha inválida";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: AppTheme.errorColor.withAlpha(51),
+      color: AppTheme.alertColor.withAlpha(51),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -55,7 +65,7 @@ class AlertaMetereologicaCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: AppTheme.errorColor),
+                Icon(Icons.warning_amber_rounded, color: AppTheme.alertColor),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -74,11 +84,11 @@ class AlertaMetereologicaCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Desde: ${DateFormat('dd/MM HH:mm').format(DateTime.parse(alert.inicio))}',
+                  'Desde: ${formatDateTime(alert.inicio)}',
                   style: theme.textTheme.bodySmall,
                 ),
                 Text(
-                  'Hasta: ${DateFormat('dd/MM HH:mm').format(DateTime.parse(alert.fin))}',
+                  'Hasta: ${formatDateTime(alert.fin)}',
                   style: theme.textTheme.bodySmall,
                 ),
               ],

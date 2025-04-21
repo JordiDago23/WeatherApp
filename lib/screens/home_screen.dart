@@ -4,10 +4,9 @@ import 'package:weather_app_jml/models/pronostico_model.dart';
 import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
 import 'package:weather_app_jml/models/ciudad_model.dart';
 import 'package:weather_app_jml/services/servicio_api.dart';
-import 'package:weather_app_jml/services/servicio_almacenamiento.dart';
+import 'package:weather_app_jml/services/shared_preferences_service.dart';
 import 'package:weather_app_jml/widgets/clima_actual_card.dart';
 import 'package:weather_app_jml/widgets/pronostico_card.dart';
-import 'package:weather_app_jml/widgets/alertas_meteorologicas.dart';
 import 'package:weather_app_jml/widgets/buscador_ciudad.dart';
 import 'package:weather_app_jml/screens/alerta_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
@@ -21,8 +20,8 @@ class HomeScreen extends StatefulWidget {
 
 class _EstadoHomeScreen extends State<HomeScreen> {
   final ServicioApi _servicioApi = ServicioApi();
-  final ServicioAlmacenamiento _servicioAlmacenamiento =
-      ServicioAlmacenamiento();
+  final SharedPreferencesService _servicioSharedPreferences =
+      SharedPreferencesService();
 
   Clima? _climaActual;
   List<Pronostico> _pronosticos = [];
@@ -39,25 +38,9 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     _obtenerClimaUbicacionActual();
   }
 
-  void _mostrarAlertaPrueba() {
-    final alertaPrueba = AlertaMetereologica.crearAlertaPrueba();
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder:
-            (context) => AlertaScreen(
-              alerta: alertaPrueba,
-              onClose: () {
-                Navigator.of(context).pop();
-              },
-            ),
-      ),
-    );
-  }
-
   Future<void> _cargarCiudadesRecientes() async {
     try {
-      final ciudades = await _servicioAlmacenamiento.getRecentCities();
+      final ciudades = await _servicioSharedPreferences.getCiudadesRecientes();
       setState(() {
         _ciudadesRecientes = ciudades;
       });
@@ -99,7 +82,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         _estaCargando = false;
       });
 
-      await _servicioAlmacenamiento.addRecentCity(clima.nombreCiudad);
+      await _servicioSharedPreferences.addCiudadesRecientes(clima.nombreCiudad);
       await _cargarCiudadesRecientes();
     } catch (e) {
       setState(() {
@@ -109,7 +92,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     }
   }
 
-  Future<void> _obtenerClimaCiudad(String ciudad) async {
+  Future<void> _obtenerClimaCiudadBuscada(String ciudad) async {
     setState(() {
       _estaCargando = true;
       _error = '';
@@ -120,13 +103,21 @@ class _EstadoHomeScreen extends State<HomeScreen> {
 
       final pronosticos = await _servicioApi.obtenerPronosticoPorCiudad(ciudad);
 
+      final coordenadas = await _servicioApi.obtenerCoordendasCiudad(ciudad);
+
+      final alertas = await _servicioApi.obtenerAlertasMeteorologicas(
+        coordenadas['lat']!,
+        coordenadas['lon']!,
+      );
+
       setState(() {
         _climaActual = clima;
         _pronosticos = pronosticos;
+        _alertas = alertas;
         _estaCargando = false;
       });
 
-      await _servicioAlmacenamiento.addRecentCity(ciudad);
+      await _servicioSharedPreferences.addCiudadesRecientes(ciudad);
       await _cargarCiudadesRecientes();
     } catch (e) {
       setState(() {
@@ -136,18 +127,149 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     }
   }
 
+  void _mostrarAlertas() {
+    if (_alertas.isEmpty) {
+      final alertasPrueba = AlertaMetereologica.crearAlertasPrueba();
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text('Alertas Meteorológicas'),
+            children: [
+              ...alertasPrueba.map(
+                (alerta) => InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (context) => AlertaScreen(
+                              alerta: alerta,
+                              onClose: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 16,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppTheme.alertColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(alerta.evento)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 16, top: 8),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    if (_alertas.length == 1) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder:
+              (context) => AlertaScreen(
+                alerta: _alertas[0],
+                onClose: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text('Alertas Meteorológicas'),
+            children: [
+              ..._alertas.map(
+                (alerta) => InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (context) => AlertaScreen(
+                              alerta: alerta,
+                              onClose: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 16,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppTheme.alertColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(alerta.evento)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 16, top: 8),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mi App del Clima'),
+        title: const Text('Weather App JML'),
         actions: [
           IconButton(
             icon: const Icon(Icons.warning_amber_rounded),
-            tooltip: 'Probar alerta',
-            onPressed: _mostrarAlertaPrueba,
+            tooltip: 'Ver alertas meteorológicas',
+            onPressed: _mostrarAlertas,
           ),
           IconButton(
             icon: const Icon(Icons.my_location),
@@ -170,7 +292,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+            Icon(Icons.error_outline, size: 48, color: AppTheme.alertColor),
             const SizedBox(height: 16),
             Text(
               _error,
@@ -192,7 +314,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: BuscadorCiudad(onCitySelected: _obtenerClimaCiudad),
+            child: BuscadorCiudad(onCitySelected: _obtenerClimaCiudadBuscada),
           ),
 
           if (_ciudadesRecientes.isNotEmpty) ...[
@@ -221,7 +343,9 @@ class _EstadoHomeScreen extends State<HomeScreen> {
                         backgroundColor: AppTheme.secondaryColor.withAlpha(50),
                         labelStyle: TextStyle(color: AppTheme.primaryColor),
                         onPressed: () {
-                          _obtenerClimaCiudad(_ciudadesRecientes[index].nombre);
+                          _obtenerClimaCiudadBuscada(
+                            _ciudadesRecientes[index].nombre,
+                          );
                         },
                       ),
                     );
@@ -266,12 +390,6 @@ class _EstadoHomeScreen extends State<HomeScreen> {
                 child: ListaPronostico(pronosticos: _pronosticos),
               ),
             ],
-            if (_alertas.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: AlertasMeteorologicas(alertas: _alertas),
-              ),
-            const SizedBox(height: 40),
           ],
         ],
       ),

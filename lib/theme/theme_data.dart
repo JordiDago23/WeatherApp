@@ -5,7 +5,7 @@ class AppTheme {
   static const Color secondaryColor = Color(0xFF64B5F6);
   static const Color backgroundColor = Color(0xFFF5F5F5);
   static const Color cardColor = Color(0xFFFFFFFF);
-  static const Color errorColor = Color(0xFFE57373);
+  static const Color alertColor = Color(0xFFE57373);
 
   static const Color temperaturaAltaColor = Color(0xFFF44336);
   static const Color temperaturaBajaColor = Color(0xFF42A5F5);
@@ -24,7 +24,7 @@ class AppTheme {
         primary: primaryColor,
         secondary: secondaryColor,
         surface: backgroundColor,
-        error: errorColor,
+        error: alertColor,
         brightness: Brightness.light,
       ),
 

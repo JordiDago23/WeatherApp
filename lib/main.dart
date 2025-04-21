@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mi App del Clima',
+      title: 'Weather App JML',
       theme: AppTheme.getTheme(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

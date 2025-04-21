@@ -190,4 +190,27 @@ class ServicioApi {
 
     return await Geolocator.getCurrentPosition();
   }
+
+  Future<Map<String, double>> obtenerCoordendasCiudad(String ciudad) async {
+    try {
+      final respuesta = await http.get(
+        Uri.parse('$_urlBase/weather?q=$ciudad&appid=$_claveApi'),
+      );
+
+      if (respuesta.statusCode == 200) {
+        final datos = jsonDecode(respuesta.body);
+        final Map<String, dynamic> coordenadas = datos['coord'];
+        return {
+          'lat': coordenadas['lat'].toDouble(),
+          'lon': coordenadas['lon'].toDouble(),
+        };
+      } else {
+        throw Exception(
+          'Error al obtener coordenadas: ${respuesta.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error al obtener coordenadas: $e');
+    }
+  }
 }

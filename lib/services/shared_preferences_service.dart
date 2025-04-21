@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather_app_jml/models/ciudad_model.dart';
 
-class ServicioAlmacenamiento {
+class SharedPreferencesService {
   static const String _ciudadesRecientesKey = 'recent_cities';
 
-  Future<void> addRecentCity(String cityName) async {
+  Future<void> addCiudadesRecientes(String cityName) async {
     final prefs = await SharedPreferences.getInstance();
-    List<Ciudad> ciudades = await getRecentCities();
+    List<Ciudad> ciudades = await getCiudadesRecientes();
 
     if (!ciudades.any((ciudad) => ciudad.nombre == cityName)) {
       ciudades.add(Ciudad(nombre: cityName));
@@ -22,7 +22,7 @@ class ServicioAlmacenamiento {
     }
   }
 
-  Future<List<Ciudad>> getRecentCities() async {
+  Future<List<Ciudad>> getCiudadesRecientes() async {
     final prefs = await SharedPreferences.getInstance();
     final List<String>? citiesJson = prefs.getStringList(_ciudadesRecientesKey);
 
