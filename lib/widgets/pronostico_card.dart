@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:weather_app_jml/models/forecast_model.dart';
-import 'package:weather_app_jml/theme/app_theme.dart';
+import 'package:weather_app_jml/models/pronostico_model.dart';
+import 'package:weather_app_jml/theme/theme_data.dart';
 
-class ForecastCard extends StatelessWidget {
-  final Forecast forecast;
+class PronosticoCard extends StatelessWidget {
+  final Pronostico pronostico;
 
-  const ForecastCard({super.key, required this.forecast});
+  const PronosticoCard({super.key, required this.pronostico});
 
   @override
   Widget build(BuildContext context) {
@@ -22,29 +22,29 @@ class ForecastCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              DateFormat('E', 'es').format(forecast.date),
+              DateFormat('E', 'es').format(pronostico.fecha),
               style: Theme.of(
                 context,
               ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 2),
             Text(
-              DateFormat('d MMM', 'es').format(forecast.date),
+              DateFormat('d MMM', 'es').format(pronostico.fecha),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             Image.network(
-              'https://openweathermap.org/img/wn/${forecast.icon}.png',
+              'https://openweathermap.org/img/wn/${pronostico.icono}.png',
               width: 40,
               height: 40,
             ),
             Text(
-              '${forecast.temperature.round()}°C',
+              '${pronostico.temperatura.round()}°C',
               style: Theme.of(
                 context,
               ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
-              forecast.description,
+              pronostico.descripcion,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -57,10 +57,10 @@ class ForecastCard extends StatelessWidget {
   }
 }
 
-class ForecastList extends StatelessWidget {
-  final List<Forecast> forecasts;
+class ListaPronostico extends StatelessWidget {
+  final List<Pronostico> pronosticos;
 
-  const ForecastList({super.key, required this.forecasts});
+  const ListaPronostico({super.key, required this.pronosticos});
 
   @override
   Widget build(BuildContext context) {
@@ -69,9 +69,9 @@ class ForecastList extends StatelessWidget {
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: forecasts.length,
+        itemCount: pronosticos.length,
         itemBuilder: (context, index) {
-          return ForecastCard(forecast: forecasts[index]);
+          return PronosticoCard(pronostico: pronosticos[index]);
         },
       ),
     );

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app_jml/models/weather_model.dart';
+import 'package:weather_app_jml/models/clima_model.dart';
 import 'package:intl/intl.dart';
-import 'package:weather_app_jml/theme/app_theme.dart';
+import 'package:weather_app_jml/theme/theme_data.dart';
 
-class WeatherCard extends StatelessWidget {
-  final Weather weather;
+class ClimaActualCard extends StatelessWidget {
+  final Clima clima;
 
-  const WeatherCard({super.key, required this.weather});
+  const ClimaActualCard({super.key, required this.clima});
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +20,10 @@ class WeatherCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Text(weather.cityName, style: theme.textTheme.displayMedium),
+            Text(clima.nombreCiudad, style: theme.textTheme.displayMedium),
             const SizedBox(height: 8),
             Text(
-              DateFormat('EEEE, d MMMM', 'es').format(weather.date),
+              DateFormat('EEEE, d MMMM', 'es').format(clima.fecha),
               style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 16),
@@ -31,7 +31,7 @@ class WeatherCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.network(
-                  'https://openweathermap.org/img/wn/${weather.icon}@2x.png',
+                  'https://openweathermap.org/img/wn/${clima.icono}@2x.png',
                   width: 80,
                   height: 80,
                 ),
@@ -40,10 +40,10 @@ class WeatherCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${weather.temperature.round()}°C',
+                      '${clima.temperatura.round()}°C',
                       style: theme.textTheme.displayLarge,
                     ),
-                    Text(weather.description, style: theme.textTheme.bodyLarge),
+                    Text(clima.descripcion, style: theme.textTheme.bodyLarge),
                   ],
                 ),
               ],
@@ -52,29 +52,29 @@ class WeatherCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildWeatherInfo(
+                _buildInfoClima(
                   Icons.arrow_downward,
-                  '${weather.tempMin.round()}°C',
+                  '${clima.temperaturaMinima.round()}°C',
                   'Mínima',
-                  AppTheme.tempColdColor,
+                  AppTheme.temperaturaBajaColor,
                 ),
-                _buildWeatherInfo(
+                _buildInfoClima(
                   Icons.arrow_upward,
-                  '${weather.tempMax.round()}°C',
+                  '${clima.temperaturaMaxima.round()}°C',
                   'Máxima',
-                  AppTheme.tempHotColor,
+                  AppTheme.temperaturaAltaColor,
                 ),
-                _buildWeatherInfo(
+                _buildInfoClima(
                   Icons.water_drop,
-                  '${weather.humidity}%',
+                  '${clima.humedad}%',
                   'Humedad',
-                  AppTheme.humidityColor,
+                  AppTheme.humedadColor,
                 ),
-                _buildWeatherInfo(
+                _buildInfoClima(
                   Icons.air,
-                  '${weather.windSpeed} km/h',
+                  '${clima.velocidadViento} km/h',
                   'Viento',
-                  AppTheme.windColor,
+                  AppTheme.vientoColor,
                 ),
               ],
             ),
@@ -84,18 +84,18 @@ class WeatherCard extends StatelessWidget {
     );
   }
 
-  Widget _buildWeatherInfo(
-    IconData icon,
-    String value,
+  Widget _buildInfoClima(
+    IconData icono,
+    String valor,
     String label,
-    Color iconColor,
+    Color colorIcono,
   ) {
     return Column(
       children: [
-        Icon(icon, size: 24, color: iconColor),
+        Icon(icono, size: 24, color: colorIcono),
         const SizedBox(height: 4),
         Text(
-          value,
+          valor,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         Text(

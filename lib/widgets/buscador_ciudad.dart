@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app_jml/theme/app_theme.dart';
+import 'package:weather_app_jml/theme/theme_data.dart';
 
-class CitySearch extends StatefulWidget {
+class BuscadorCiudad extends StatefulWidget {
   final Function(String) onCitySelected;
 
-  const CitySearch({super.key, required this.onCitySelected});
+  const BuscadorCiudad({super.key, required this.onCitySelected});
 
   @override
-  State<CitySearch> createState() => _CitySearchState();
+  State<BuscadorCiudad> createState() => _BuscadorCiudadState();
 }
 
-class _CitySearchState extends State<CitySearch> {
+class _BuscadorCiudadState extends State<BuscadorCiudad> {
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -19,7 +19,7 @@ class _CitySearchState extends State<CitySearch> {
     super.dispose();
   }
 
-  void _searchCity() {
+  void _buscarCiudad() {
     final city = _controller.text.trim();
     if (city.isNotEmpty) {
       widget.onCitySelected(city);
@@ -42,7 +42,7 @@ class _CitySearchState extends State<CitySearch> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
       ),
       textInputAction: TextInputAction.search,
-      onSubmitted: (_) => _searchCity(),
+      onSubmitted: (_) => _buscarCiudad(),
     );
   }
 }

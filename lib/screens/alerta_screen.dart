@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app_jml/models/alert_model.dart';
+import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
 import 'package:intl/intl.dart';
-import 'package:weather_app_jml/theme/app_theme.dart';
+import 'package:weather_app_jml/theme/theme_data.dart';
 
-class AlertScreen extends StatelessWidget {
-  final WeatherAlert alert;
+class AlertaScreen extends StatelessWidget {
+  final AlertaMetereologica alerta;
   final VoidCallback onClose;
 
-  const AlertScreen({super.key, required this.alert, required this.onClose});
+  const AlertaScreen({super.key, required this.alerta, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class AlertScreen extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        alert.evento,
+                        alerta.evento,
                         style: theme.textTheme.headlineSmall,
                       ),
                     ),
@@ -72,14 +72,14 @@ class AlertScreen extends StatelessWidget {
                             DateFormat(
                               'dd/MM/yyyy',
                               'es',
-                            ).format(DateTime.parse(alert.inicio)),
+                            ).format(DateTime.parse(alerta.inicio)),
                             style: theme.textTheme.bodyMedium,
                           ),
                           Text(
                             DateFormat(
                               'HH:mm',
                               'es',
-                            ).format(DateTime.parse(alert.inicio)),
+                            ).format(DateTime.parse(alerta.inicio)),
                             style: theme.textTheme.bodyMedium,
                           ),
                         ],
@@ -97,14 +97,14 @@ class AlertScreen extends StatelessWidget {
                             DateFormat(
                               'dd/MM/yyyy',
                               'es',
-                            ).format(DateTime.parse(alert.fin)),
+                            ).format(DateTime.parse(alerta.fin)),
                             style: theme.textTheme.bodyMedium,
                           ),
                           Text(
                             DateFormat(
                               'HH:mm',
                               'es',
-                            ).format(DateTime.parse(alert.fin)),
+                            ).format(DateTime.parse(alerta.fin)),
                             style: theme.textTheme.bodyMedium,
                           ),
                         ],
@@ -121,7 +121,7 @@ class AlertScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    alert.descripcion,
+                    alerta.descripcion,
                     style: theme.textTheme.bodyLarge,
                   ),
                 ),

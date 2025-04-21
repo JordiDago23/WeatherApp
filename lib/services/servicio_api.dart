@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import '../models/weather_model.dart';
-import '../models/forecast_model.dart';
-import '../models/alert_model.dart';
+import '../models/clima_model.dart';
+import '../models/pronostico_model.dart';
+import '../models/alerta_metereologica_model.dart';
 
 class ServicioApi {
   static final String _claveApi = dotenv.env['OPENWEATHERAPIKEY'] ?? '';
@@ -24,29 +24,31 @@ class ServicioApi {
       final List<dynamic> listaPronostico = datos['list'];
       final Map<String, dynamic> datosCiudad = datos['city'];
 
-      List<Forecast> pronosticos = [];
+      List<Pronostico> pronosticos = [];
       String fechaActual = "";
 
       for (var item in listaPronostico) {
         String fecha = item['dt_txt'].toString().split(' ')[0];
         if (fecha != fechaActual) {
           fechaActual = fecha;
-          pronosticos.add(Forecast.fromJson(item));
+          pronosticos.add(Pronostico.fromJson(item));
         }
         if (pronosticos.length >= 5) break;
       }
 
       final datosPronosticoPrimero = listaPronostico[0];
-      final clima = Weather(
-        cityName: datosCiudad['name'],
-        temperature: datosPronosticoPrimero['main']['temp'].toDouble(),
-        description: datosPronosticoPrimero['weather'][0]['description'],
-        tempMin: datosPronosticoPrimero['main']['temp_min'].toDouble(),
-        tempMax: datosPronosticoPrimero['main']['temp_max'].toDouble(),
-        humidity: datosPronosticoPrimero['main']['humidity'],
-        windSpeed: datosPronosticoPrimero['wind']['speed'].toDouble(),
-        icon: datosPronosticoPrimero['weather'][0]['icon'],
-        date: DateTime.parse(datosPronosticoPrimero['dt_txt']),
+      final clima = Clima(
+        nombreCiudad: datosCiudad['name'],
+        temperatura: datosPronosticoPrimero['main']['temp'].toDouble(),
+        descripcion: datosPronosticoPrimero['weather'][0]['description'],
+        temperaturaMinima:
+            datosPronosticoPrimero['main']['temp_min'].toDouble(),
+        temperaturaMaxima:
+            datosPronosticoPrimero['main']['temp_max'].toDouble(),
+        humedad: datosPronosticoPrimero['main']['humidity'],
+        velocidadViento: datosPronosticoPrimero['wind']['speed'].toDouble(),
+        icono: datosPronosticoPrimero['weather'][0]['icon'],
+        fecha: DateTime.parse(datosPronosticoPrimero['dt_txt']),
       );
 
       return {'weather': clima, 'forecasts': pronosticos};
@@ -72,29 +74,31 @@ class ServicioApi {
       final List<dynamic> listaPronostico = datos['list'];
       final Map<String, dynamic> datosCiudad = datos['city'];
 
-      List<Forecast> pronosticos = [];
+      List<Pronostico> pronosticos = [];
       String fechaActual = "";
 
       for (var item in listaPronostico) {
         String fecha = item['dt_txt'].toString().split(' ')[0];
         if (fecha != fechaActual) {
           fechaActual = fecha;
-          pronosticos.add(Forecast.fromJson(item));
+          pronosticos.add(Pronostico.fromJson(item));
         }
         if (pronosticos.length >= 5) break;
       }
 
       final datosPronosticoPrimero = listaPronostico[0];
-      final clima = Weather(
-        cityName: datosCiudad['name'],
-        temperature: datosPronosticoPrimero['main']['temp'].toDouble(),
-        description: datosPronosticoPrimero['weather'][0]['description'],
-        tempMin: datosPronosticoPrimero['main']['temp_min'].toDouble(),
-        tempMax: datosPronosticoPrimero['main']['temp_max'].toDouble(),
-        humidity: datosPronosticoPrimero['main']['humidity'],
-        windSpeed: datosPronosticoPrimero['wind']['speed'].toDouble(),
-        icon: datosPronosticoPrimero['weather'][0]['icon'],
-        date: DateTime.parse(datosPronosticoPrimero['dt_txt']),
+      final clima = Clima(
+        nombreCiudad: datosCiudad['name'],
+        temperatura: datosPronosticoPrimero['main']['temp'].toDouble(),
+        descripcion: datosPronosticoPrimero['weather'][0]['description'],
+        temperaturaMinima:
+            datosPronosticoPrimero['main']['temp_min'].toDouble(),
+        temperaturaMaxima:
+            datosPronosticoPrimero['main']['temp_max'].toDouble(),
+        humedad: datosPronosticoPrimero['main']['humidity'],
+        velocidadViento: datosPronosticoPrimero['wind']['speed'].toDouble(),
+        icono: datosPronosticoPrimero['weather'][0]['icon'],
+        fecha: DateTime.parse(datosPronosticoPrimero['dt_txt']),
       );
 
       return {'weather': clima, 'forecasts': pronosticos};
@@ -105,17 +109,17 @@ class ServicioApi {
     }
   }
 
-  Future<Weather> obtenerClimaPorCiudad(String ciudad) async {
+  Future<Clima> obtenerClimaPorCiudad(String ciudad) async {
     final resultado = await obtenerClimaYPronosticoPorCiudad(ciudad);
     return resultado['weather'];
   }
 
-  Future<List<Forecast>> obtenerPronosticoPorCiudad(String ciudad) async {
+  Future<List<Pronostico>> obtenerPronosticoPorCiudad(String ciudad) async {
     final resultado = await obtenerClimaYPronosticoPorCiudad(ciudad);
     return resultado['forecasts'];
   }
 
-  Future<Weather> obtenerClimaPorUbicacion(
+  Future<Clima> obtenerClimaPorUbicacion(
     double latitud,
     double longitud,
   ) async {
@@ -126,7 +130,7 @@ class ServicioApi {
     return resultado['weather'];
   }
 
-  Future<List<Forecast>> obtenerPronosticoPorUbicacion(
+  Future<List<Pronostico>> obtenerPronosticoPorUbicacion(
     double latitud,
     double longitud,
   ) async {
@@ -137,7 +141,7 @@ class ServicioApi {
     return resultado['forecasts'];
   }
 
-  Future<List<WeatherAlert>> obtenerAlertasMeteorologicas(
+  Future<List<AlertaMetereologica>> obtenerAlertasMeteorologicas(
     double latitud,
     double longitud,
   ) async {
@@ -150,12 +154,12 @@ class ServicioApi {
 
       if (respuesta.statusCode == 200) {
         final datos = jsonDecode(respuesta.body);
-        List<WeatherAlert> alertas = [];
+        List<AlertaMetereologica> alertas = [];
 
         if (datos.containsKey('alerts')) {
           final List<dynamic> listaAlertas = datos['alerts'];
           for (var alerta in listaAlertas) {
-            alertas.add(WeatherAlert.fromJson(alerta));
+            alertas.add(AlertaMetereologica.fromJson(alerta));
           }
         }
 

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app_jml/models/weather_model.dart';
-import 'package:weather_app_jml/models/forecast_model.dart';
-import 'package:weather_app_jml/models/alert_model.dart';
-import 'package:weather_app_jml/models/city_model.dart';
-import 'package:weather_app_jml/services/api_service.dart';
-import 'package:weather_app_jml/services/storage_service.dart';
-import 'package:weather_app_jml/widgets/weather_card.dart';
-import 'package:weather_app_jml/widgets/forecast_card.dart';
-import 'package:weather_app_jml/widgets/weather_alerts.dart';
-import 'package:weather_app_jml/widgets/city_search.dart';
-import 'package:weather_app_jml/screens/alert_screen.dart';
-import 'package:weather_app_jml/theme/app_theme.dart';
+import 'package:weather_app_jml/models/clima_model.dart';
+import 'package:weather_app_jml/models/pronostico_model.dart';
+import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
+import 'package:weather_app_jml/models/ciudad_model.dart';
+import 'package:weather_app_jml/services/servicio_api.dart';
+import 'package:weather_app_jml/services/servicio_almacenamiento.dart';
+import 'package:weather_app_jml/widgets/clima_actual_card.dart';
+import 'package:weather_app_jml/widgets/pronostico_card.dart';
+import 'package:weather_app_jml/widgets/alertas_meteorologicas.dart';
+import 'package:weather_app_jml/widgets/buscador_ciudad.dart';
+import 'package:weather_app_jml/screens/alerta_screen.dart';
+import 'package:weather_app_jml/theme/theme_data.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,12 +21,13 @@ class HomeScreen extends StatefulWidget {
 
 class _EstadoHomeScreen extends State<HomeScreen> {
   final ServicioApi _servicioApi = ServicioApi();
-  final StorageService _servicioAlmacenamiento = StorageService();
+  final ServicioAlmacenamiento _servicioAlmacenamiento =
+      ServicioAlmacenamiento();
 
-  Weather? _climaActual;
-  List<Forecast> _pronosticos = [];
-  List<WeatherAlert> _alertas = [];
-  List<City> _ciudadesRecientes = [];
+  Clima? _climaActual;
+  List<Pronostico> _pronosticos = [];
+  List<AlertaMetereologica> _alertas = [];
+  List<Ciudad> _ciudadesRecientes = [];
 
   bool _estaCargando = false;
   String _error = '';
@@ -39,13 +40,13 @@ class _EstadoHomeScreen extends State<HomeScreen> {
   }
 
   void _mostrarAlertaPrueba() {
-    final alertaPrueba = WeatherAlert.createTestAlert();
+    final alertaPrueba = AlertaMetereologica.crearAlertaPrueba();
 
     Navigator.of(context).push(
       MaterialPageRoute(
         builder:
-            (context) => AlertScreen(
-              alert: alertaPrueba,
+            (context) => AlertaScreen(
+              alerta: alertaPrueba,
               onClose: () {
                 Navigator.of(context).pop();
               },
@@ -98,7 +99,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         _estaCargando = false;
       });
 
-      await _servicioAlmacenamiento.addRecentCity(clima.cityName);
+      await _servicioAlmacenamiento.addRecentCity(clima.nombreCiudad);
       await _cargarCiudadesRecientes();
     } catch (e) {
       setState(() {
@@ -191,7 +192,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: CitySearch(onCitySelected: _obtenerClimaCiudad),
+            child: BuscadorCiudad(onCitySelected: _obtenerClimaCiudad),
           ),
 
           if (_ciudadesRecientes.isNotEmpty) ...[
@@ -216,11 +217,11 @@ class _EstadoHomeScreen extends State<HomeScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(
-                        label: Text(_ciudadesRecientes[index].name),
+                        label: Text(_ciudadesRecientes[index].nombre),
                         backgroundColor: AppTheme.secondaryColor.withAlpha(50),
                         labelStyle: TextStyle(color: AppTheme.primaryColor),
                         onPressed: () {
-                          _obtenerClimaCiudad(_ciudadesRecientes[index].name);
+                          _obtenerClimaCiudad(_ciudadesRecientes[index].nombre);
                         },
                       ),
                     );
@@ -244,7 +245,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: WeatherCard(weather: _climaActual!),
+              child: ClimaActualCard(clima: _climaActual!),
             ),
             if (_pronosticos.isNotEmpty) ...[
               Padding(
@@ -262,13 +263,13 @@ class _EstadoHomeScreen extends State<HomeScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ForecastList(forecasts: _pronosticos),
+                child: ListaPronostico(pronosticos: _pronosticos),
               ),
             ],
             if (_alertas.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: WeatherAlerts(alerts: _alertas),
+                child: AlertasMeteorologicas(alertas: _alertas),
               ),
             const SizedBox(height: 40),
           ],

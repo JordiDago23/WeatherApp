@@ -3,18 +3,14 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static const Color primaryColor = Color(0xFF2196F3);
   static const Color secondaryColor = Color(0xFF64B5F6);
-  static const Color accentColor = Color(0xFFFFA726);
   static const Color backgroundColor = Color(0xFFF5F5F5);
   static const Color cardColor = Color(0xFFFFFFFF);
   static const Color errorColor = Color(0xFFE57373);
 
-  static const Color tempHotColor = Color(0xFFF44336);
-  static const Color tempColdColor = Color(0xFF42A5F5);
-  static const Color rainColor = Color(0xFF42A5F5);
-  static const Color sunnyColor = Color(0xFFFFEB3B);
-  static const Color cloudyColor = Color(0xFF90A4AE);
-  static const Color windColor = Color(0xFF78909C);
-  static const Color humidityColor = Color(0xFF29B6F6);
+  static const Color temperaturaAltaColor = Color(0xFFF44336);
+  static const Color temperaturaBajaColor = Color(0xFF42A5F5);
+  static const Color vientoColor = Color(0xFF78909C);
+  static const Color humedadColor = Color(0xFF29B6F6);
 
   static const Color textColorPrimary = Color(0xFF212121);
   static const Color textColorSecondary = Color(0xFF757575);

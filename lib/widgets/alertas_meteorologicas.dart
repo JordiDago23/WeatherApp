@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app_jml/models/alert_model.dart';
+import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
 import 'package:intl/intl.dart';
-import 'package:weather_app_jml/theme/app_theme.dart';
+import 'package:weather_app_jml/theme/theme_data.dart';
 
-class WeatherAlerts extends StatelessWidget {
-  final List<WeatherAlert> alerts;
+class AlertasMeteorologicas extends StatelessWidget {
+  final List<AlertaMetereologica> alertas;
 
-  const WeatherAlerts({super.key, required this.alerts});
+  const AlertasMeteorologicas({super.key, required this.alertas});
 
   @override
   Widget build(BuildContext context) {
-    if (alerts.isEmpty) {
+    if (alertas.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -24,9 +24,9 @@ class WeatherAlerts extends StatelessWidget {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: alerts.length,
+          itemCount: alertas.length,
           itemBuilder: (context, index) {
-            return AlertCard(alert: alerts[index]);
+            return AlertaMetereologicaCard(alert: alertas[index]);
           },
         ),
       ],
@@ -34,10 +34,10 @@ class WeatherAlerts extends StatelessWidget {
   }
 }
 
-class AlertCard extends StatelessWidget {
-  final WeatherAlert alert;
+class AlertaMetereologicaCard extends StatelessWidget {
+  final AlertaMetereologica alert;
 
-  const AlertCard({super.key, required this.alert});
+  const AlertaMetereologicaCard({super.key, required this.alert});
 
   @override
   Widget build(BuildContext context) {

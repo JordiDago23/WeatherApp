@@ -1,4 +1,4 @@
-class WeatherAlert {
+class AlertaMetereologica {
   final String evento;
   final String descripcion;
   final String inicio;
@@ -6,7 +6,7 @@ class WeatherAlert {
   final String remitente;
   final String tipo;
 
-  WeatherAlert({
+  AlertaMetereologica({
     required this.evento,
     required this.descripcion,
     required this.inicio,
@@ -15,8 +15,8 @@ class WeatherAlert {
     required this.tipo,
   });
 
-  factory WeatherAlert.fromJson(Map<String, dynamic> json) {
-    return WeatherAlert(
+  factory AlertaMetereologica.fromJson(Map<String, dynamic> json) {
+    return AlertaMetereologica(
       evento: json['event'] ?? 'Desconocido',
       descripcion: json['description'] ?? 'Sin descripción',
       inicio: json['start']?.toString() ?? 'Desconocido',
@@ -26,8 +26,8 @@ class WeatherAlert {
     );
   }
 
-  static WeatherAlert createTestAlert() {
-    return WeatherAlert(
+  static AlertaMetereologica crearAlertaPrueba() {
+    return AlertaMetereologica(
       evento: 'Alerta de lluvia',
       descripcion: 'Se esperan lluvias intensas en las próximas horas',
       inicio: DateTime.now().toString(),
