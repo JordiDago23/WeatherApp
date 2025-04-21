@@ -4,7 +4,7 @@ import 'package:weather_app_jml/theme/app_theme.dart';
 class CitySearch extends StatefulWidget {
   final Function(String) onCitySelected;
 
-  const CitySearch({Key? key, required this.onCitySelected}) : super(key: key);
+  const CitySearch({super.key, required this.onCitySelected});
 
   @override
   State<CitySearch> createState() => _CitySearchState();

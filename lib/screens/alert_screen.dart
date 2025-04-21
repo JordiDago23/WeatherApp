@@ -7,8 +7,7 @@ class AlertScreen extends StatelessWidget {
   final WeatherAlert alert;
   final VoidCallback onClose;
 
-  const AlertScreen({Key? key, required this.alert, required this.onClose})
-    : super(key: key);
+  const AlertScreen({super.key, required this.alert, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +18,7 @@ class AlertScreen extends StatelessWidget {
         title: const Text('Alerta Meteorológica'),
         backgroundColor: AppTheme.errorColor,
         foregroundColor: AppTheme.textColorLight,
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -29,7 +29,7 @@ class AlertScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withOpacity(0.2),
+                  color: AppTheme.errorColor.withAlpha(51),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

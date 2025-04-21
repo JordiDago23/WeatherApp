@@ -6,7 +6,7 @@ import 'package:weather_app_jml/theme/app_theme.dart';
 class WeatherAlerts extends StatelessWidget {
   final List<WeatherAlert> alerts;
 
-  const WeatherAlerts({Key? key, required this.alerts}) : super(key: key);
+  const WeatherAlerts({super.key, required this.alerts});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class WeatherAlerts extends StatelessWidget {
 class AlertCard extends StatelessWidget {
   final WeatherAlert alert;
 
-  const AlertCard({Key? key, required this.alert}) : super(key: key);
+  const AlertCard({super.key, required this.alert});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +45,7 @@ class AlertCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: AppTheme.errorColor.withOpacity(0.2),
+      color: AppTheme.errorColor.withAlpha(51),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(

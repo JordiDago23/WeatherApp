@@ -6,12 +6,10 @@ import 'package:weather_app_jml/theme/app_theme.dart';
 class ForecastCard extends StatelessWidget {
   final Forecast forecast;
 
-  const ForecastCard({Key? key, required this.forecast}) : super(key: key);
+  const ForecastCard({super.key, required this.forecast});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Card(
       margin: const EdgeInsets.only(right: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -25,14 +23,14 @@ class ForecastCard extends StatelessWidget {
           children: [
             Text(
               DateFormat('E', 'es').format(forecast.date),
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 2),
             Text(
               DateFormat('d MMM', 'es').format(forecast.date),
-              style: theme.textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             Image.network(
               'https://openweathermap.org/img/wn/${forecast.icon}.png',
@@ -41,13 +39,13 @@ class ForecastCard extends StatelessWidget {
             ),
             Text(
               '${forecast.temperature.round()}°C',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               forecast.description,
-              style: theme.textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -62,12 +60,10 @@ class ForecastCard extends StatelessWidget {
 class ForecastList extends StatelessWidget {
   final List<Forecast> forecasts;
 
-  const ForecastList({Key? key, required this.forecasts}) : super(key: key);
+  const ForecastList({super.key, required this.forecasts});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Container(
       height: 160,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),

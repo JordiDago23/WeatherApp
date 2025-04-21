@@ -11,6 +11,7 @@ class WeatherAlert {
     required this.end,
   });
 
+  // Método para crear una alerta desde JSON
   factory WeatherAlert.fromJson(Map<String, dynamic> json) {
     return WeatherAlert(
       event: json['event'],
@@ -20,6 +21,7 @@ class WeatherAlert {
     );
   }
 
+  // Método para crear una alerta de prueba
   static WeatherAlert createTestAlert() {
     return WeatherAlert(
       event: 'Alerta de lluvia',

@@ -6,7 +6,7 @@ import 'package:weather_app_jml/theme/app_theme.dart';
 class WeatherCard extends StatelessWidget {
   final Weather weather;
 
-  const WeatherCard({Key? key, required this.weather}) : super(key: key);
+  const WeatherCard({super.key, required this.weather});
 
   @override
   Widget build(BuildContext context) {

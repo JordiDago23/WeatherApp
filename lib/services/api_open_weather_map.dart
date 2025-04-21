@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:weather_app_jml/models/weather_model.dart';
 import 'package:weather_app_jml/models/forecast_model.dart';
 import 'package:weather_app_jml/models/alert_model.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiOpenWeatherMap {
   static final String _apiKey = dotenv.env['OPENWEATHERAPIKEY'] ?? '';
@@ -128,12 +129,12 @@ class ApiOpenWeatherMap {
 
       return alerts;
     } else if (response.statusCode == 401) {
-      print(
+      debugPrint(
         'Error de autenticación (401) en la API One Call. Devolviendo lista vacía de alertas.',
       );
       return [];
     } else {
-      print(
+      debugPrint(
         'Error al obtener alertas: ${response.statusCode}. Devolviendo lista vacía.',
       );
       return [];

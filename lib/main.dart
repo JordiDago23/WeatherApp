@@ -10,9 +10,9 @@ void main() async {
 
   try {
     await dotenv.load(fileName: ".env");
-    print("Archivo .env cargado correctamente");
+    debugPrint("Archivo .env cargado correctamente");
   } catch (e) {
-    print("Error al cargar archivo .env: $e");
+    debugPrint("Error al cargar archivo .env: $e");
   }
 
   await initializeDateFormatting('es');

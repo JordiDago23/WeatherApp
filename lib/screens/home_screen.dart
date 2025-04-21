@@ -13,7 +13,7 @@ import 'package:weather_app_jml/screens/alert_screen.dart';
 import 'package:weather_app_jml/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -48,12 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
               alert: testAlert,
               onClose: () {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Alerta cerrada'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
               },
             ),
       ),
