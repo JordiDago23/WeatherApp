@@ -1,21 +1,21 @@
 class Forecast {
-  final String dateTime;
+  final DateTime date;
   final double temperature;
-  final String mainCondition;
+  final String description;
   final String icon;
 
   Forecast({
-    required this.dateTime,
+    required this.date,
     required this.temperature,
-    required this.mainCondition,
+    required this.description,
     required this.icon,
   });
 
   factory Forecast.fromJson(Map<String, dynamic> json) {
     return Forecast(
-      dateTime: json['dt_txt'],
+      date: DateTime.parse(json['dt_txt']),
       temperature: json['main']['temp'].toDouble(),
-      mainCondition: json['weather'][0]['main'],
+      description: json['weather'][0]['description'],
       icon: json['weather'][0]['icon'],
     );
   }

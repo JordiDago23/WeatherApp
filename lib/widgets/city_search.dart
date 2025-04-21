@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/city_model.dart';
+import 'package:weather_app_jml/theme/app_theme.dart';
 
 class CitySearch extends StatefulWidget {
   final Function(String) onCitySelected;
-  final List<City> recentCities;
 
-  const CitySearch({
-    Key? key,
-    required this.onCitySelected,
-    required this.recentCities,
-  }) : super(key: key);
+  const CitySearch({Key? key, required this.onCitySelected}) : super(key: key);
 
   @override
   State<CitySearch> createState() => _CitySearchState();
@@ -24,68 +19,30 @@ class _CitySearchState extends State<CitySearch> {
     super.dispose();
   }
 
+  void _searchCity() {
+    final city = _controller.text.trim();
+    if (city.isNotEmpty) {
+      widget.onCitySelected(city);
+      _controller.clear();
+      FocusScope.of(context).unfocus();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              hintText: 'Buscar ciudad',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () {
-                  _controller.clear();
-                },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onSubmitted: (value) {
-              if (value.isNotEmpty) {
-                widget.onCitySelected(value);
-                _controller.clear();
-              }
-            },
-          ),
+    return TextField(
+      controller: _controller,
+      decoration: InputDecoration(
+        hintText: 'Buscar ciudad...',
+        prefixIcon: Icon(Icons.search, color: AppTheme.primaryColor),
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () => _controller.clear(),
         ),
-        if (widget.recentCities.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Ciudades recientes',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children:
-                        widget.recentCities.map((city) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ActionChip(
-                              avatar: const Icon(Icons.location_city, size: 16),
-                              label: Text(city.name),
-                              onPressed: () {
-                                widget.onCitySelected(city.name);
-                              },
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => _searchCity(),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:weather_app_jml/models/weather_model.dart';
 import 'package:intl/intl.dart';
-import '../models/weather_model.dart';
-import '../utils/weather_utils.dart';
+import 'package:weather_app_jml/theme/app_theme.dart';
 
 class WeatherCard extends StatelessWidget {
   final Weather weather;
@@ -10,158 +10,97 @@ class WeatherCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener la fecha formateada
-    final String currentDate =
-        DateFormat('EEEE, d MMMM', 'es').format(weather.date).toUpperCase();
+    final theme = Theme.of(context);
 
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              WeatherUtils.getTemperatureColor(weather.temperature),
-              WeatherUtils.getTemperatureColor(
-                weather.temperature,
-              ).withOpacity(0.7),
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Ciudad y fecha
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    weather.cityName,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+      color: AppTheme.cardColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(weather.cityName, style: theme.textTheme.displayMedium),
+            const SizedBox(height: 8),
+            Text(
+              DateFormat('EEEE, d MMMM', 'es').format(weather.date),
+              style: theme.textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.network(
+                  'https://openweathermap.org/img/wn/${weather.icon}@2x.png',
+                  width: 80,
+                  height: 80,
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${weather.temperature.round()}°C',
+                      style: theme.textTheme.displayLarge,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    currentDate,
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    weather.description.toUpperCase(),
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Temperatura e icono
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '${weather.temperature.toStringAsFixed(1)}°C',
-                          style: const TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        'Sensación: ${weather.feelsLike.toStringAsFixed(1)}°C',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Image.network(
-                    WeatherUtils.getWeatherIconUrl(weather.icon),
-                    width: 80,
-                    height: 80,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Temperatura mínima y máxima
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 16,
+                    Text(weather.description, style: theme.textTheme.bodyLarge),
+                  ],
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(20),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildWeatherInfo(
+                  Icons.arrow_downward,
+                  '${weather.tempMin.round()}°C',
+                  'Mínima',
+                  AppTheme.tempColdColor,
                 ),
-                child: Text(
-                  'Mín: ${weather.tempMin.toStringAsFixed(1)}°C / Máx: ${weather.tempMax.toStringAsFixed(1)}°C',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                _buildWeatherInfo(
+                  Icons.arrow_upward,
+                  '${weather.tempMax.round()}°C',
+                  'Máxima',
+                  AppTheme.tempHotColor,
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Detalles adicionales
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildDetailItem(
-                    Icons.water_drop,
-                    '${weather.humidity}%',
-                    'Humedad',
-                  ),
-                  _buildDetailItem(
-                    Icons.air,
-                    '${weather.windSpeed} km/h',
-                    'Viento',
-                  ),
-                ],
-              ),
-            ],
-          ),
+                _buildWeatherInfo(
+                  Icons.water_drop,
+                  '${weather.humidity}%',
+                  'Humedad',
+                  AppTheme.humidityColor,
+                ),
+                _buildWeatherInfo(
+                  Icons.air,
+                  '${weather.windSpeed} km/h',
+                  'Viento',
+                  AppTheme.windColor,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailItem(IconData icon, String value, String label) {
+  Widget _buildWeatherInfo(
+    IconData icon,
+    String value,
+    String label,
+    Color iconColor,
+  ) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white, size: 24),
-        const SizedBox(height: 8),
+        Icon(icon, size: 24, color: iconColor),
+        const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         Text(
           label,
-          style: const TextStyle(fontSize: 14, color: Colors.white70),
+          style: TextStyle(fontSize: 12, color: AppTheme.textColorSecondary),
         ),
       ],
     );

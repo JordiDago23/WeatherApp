@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/forecast_model.dart';
-import '../utils/weather_utils.dart';
+import 'package:weather_app_jml/models/forecast_model.dart';
+import 'package:weather_app_jml/theme/app_theme.dart';
 
 class ForecastCard extends StatelessWidget {
   final Forecast forecast;
@@ -10,58 +10,47 @@ class ForecastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DateTime forecastDate = DateTime.parse(forecast.dateTime);
-    final String formattedDate =
-        DateFormat('EEE, d MMM', 'es').format(forecastDate).toUpperCase();
+    final theme = Theme.of(context);
 
     return Card(
-      elevation: 3,
+      margin: const EdgeInsets.only(right: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: AppTheme.cardColor,
       child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              WeatherUtils.getTemperatureColor(forecast.temperature),
-              WeatherUtils.getTemperatureColor(
-                forecast.temperature,
-              ).withOpacity(0.7),
-            ],
-          ),
-        ),
+        width: 120,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              formattedDate,
-              style: const TextStyle(
-                fontSize: 14,
+              DateFormat('E', 'es').format(forecast.date),
+              style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
+            Text(
+              DateFormat('d MMM', 'es').format(forecast.date),
+              style: theme.textTheme.bodyMedium,
+            ),
             Image.network(
-              WeatherUtils.getWeatherIconUrl(forecast.icon),
-              width: 50,
-              height: 50,
+              'https://openweathermap.org/img/wn/${forecast.icon}.png',
+              width: 40,
+              height: 40,
             ),
-            const SizedBox(height: 8),
             Text(
-              '${forecast.temperature.toStringAsFixed(1)}°C',
-              style: const TextStyle(
-                fontSize: 18,
+              '${forecast.temperature.round()}°C',
+              style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
               ),
             ),
             Text(
-              forecast.mainCondition,
-              style: const TextStyle(fontSize: 14, color: Colors.white),
+              forecast.description,
+              style: theme.textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -77,37 +66,17 @@ class ForecastList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Pronóstico para los próximos días',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 160,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: forecasts.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12.0),
-                    child: SizedBox(
-                      width: 120,
-                      child: ForecastCard(forecast: forecasts[index]),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 160,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: forecasts.length,
+        itemBuilder: (context, index) {
+          return ForecastCard(forecast: forecasts[index]);
+        },
       ),
     );
   }

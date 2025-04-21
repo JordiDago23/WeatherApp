@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import '../models/weather_model.dart';
-import '../models/forecast_model.dart';
-import '../models/alert_model.dart';
-import '../models/city_model.dart';
-import '../services/api_open_weather_map.dart';
-import '../services/storage_service.dart';
-import '../widgets/weather_card.dart';
-import '../widgets/forecast_card.dart';
-import '../widgets/weather_alerts.dart';
-import '../widgets/city_search.dart';
-import '../screens/alert_screen.dart';
+import 'package:weather_app_jml/models/weather_model.dart';
+import 'package:weather_app_jml/models/forecast_model.dart';
+import 'package:weather_app_jml/models/alert_model.dart';
+import 'package:weather_app_jml/models/city_model.dart';
+import 'package:weather_app_jml/services/api_service.dart';
+import 'package:weather_app_jml/services/storage_service.dart';
+import 'package:weather_app_jml/widgets/weather_card.dart';
+import 'package:weather_app_jml/widgets/forecast_card.dart';
+import 'package:weather_app_jml/widgets/weather_alerts.dart';
+import 'package:weather_app_jml/widgets/city_search.dart';
+import 'package:weather_app_jml/screens/alert_screen.dart';
+import 'package:weather_app_jml/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -19,12 +20,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ApiOpenWeatherMap _apiService = ApiOpenWeatherMap();
+  final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
+
   Weather? _currentWeather;
   List<Forecast> _forecasts = [];
   List<WeatherAlert> _alerts = [];
   List<City> _recentCities = [];
+
   bool _isLoading = false;
   String _error = '';
 
@@ -35,21 +38,16 @@ class _HomeScreenState extends State<HomeScreen> {
     _getCurrentLocationWeather();
   }
 
-  // Mostrar alerta de prueba
   void _showTestAlert() {
-    // Crear una alerta de prueba
     final testAlert = WeatherAlert.createTestAlert();
 
-    // Navegar a la pantalla de alerta
     Navigator.of(context).push(
       MaterialPageRoute(
         builder:
             (context) => AlertScreen(
               alert: testAlert,
               onClose: () {
-                // Cerrar la pantalla de alerta
                 Navigator.of(context).pop();
-                // Mostrar un Snackbar indicando que la alerta ha sido cerrada
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Alerta cerrada'),
@@ -62,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Cargar ciudades recientes
   Future<void> _loadRecentCities() async {
     try {
       final cities = await _storageService.getRecentCities();
@@ -70,14 +67,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _recentCities = cities;
       });
     } catch (e) {
-      // Si hay error al cargar, iniciamos con lista vacía
       setState(() {
         _recentCities = [];
       });
     }
   }
 
-  // Obtener clima por ubicación actual
   Future<void> _getCurrentLocationWeather() async {
     setState(() {
       _isLoading = true;
@@ -85,20 +80,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // Obtener la ubicación actual
       final position = await _apiService.getCurrentLocation();
 
-      // Usar el nuevo método que asegura consistencia de datos
-      final weatherData = await _apiService.getWeatherAndForecastByLocation(
+      final weather = await _apiService.getWeatherByLocation(
         position.latitude,
         position.longitude,
       );
 
-      // Obtener el clima y pronósticos del resultado
-      final weather = weatherData['weather'];
-      final forecasts = weatherData['forecasts'];
+      final forecasts = await _apiService.getForecastByLocation(
+        position.latitude,
+        position.longitude,
+      );
 
-      // Obtener las alertas
       final alerts = await _apiService.getWeatherAlerts(
         position.latitude,
         position.longitude,
@@ -111,9 +104,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
 
-      // Guardar la ciudad actual en recientes
       await _storageService.addRecentCity(weather.cityName);
-      await _loadRecentCities(); // Recargar la lista
+      await _loadRecentCities();
     } catch (e) {
       setState(() {
         _error = 'Error al obtener datos del clima: $e';
@@ -122,7 +114,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Obtener clima por ciudad
   Future<void> _getCityWeather(String city) async {
     setState(() {
       _isLoading = true;
@@ -130,12 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // Usar el nuevo método que asegura consistencia de datos
-      final weatherData = await _apiService.getWeatherAndForecastByCity(city);
+      final weather = await _apiService.getWeatherByCity(city);
 
-      // Obtener el clima y pronósticos del resultado
-      final weather = weatherData['weather'];
-      final forecasts = weatherData['forecasts'];
+      final forecasts = await _apiService.getForecastByCity(city);
 
       setState(() {
         _currentWeather = weather;
@@ -143,9 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
 
-      // Guardar la ciudad en recientes
       await _storageService.addRecentCity(city);
-      await _loadRecentCities(); // Recargar la lista
+      await _loadRecentCities();
     } catch (e) {
       setState(() {
         _error = 'Error al obtener datos del clima: $e';
@@ -156,27 +143,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WeatherApp'),
+        title: const Text('Mi App del Clima'),
         actions: [
-          // Botón para probar las alertas meteorológicas
           IconButton(
             icon: const Icon(Icons.warning_amber_rounded),
-            tooltip: 'Probar alerta meteorológica',
+            tooltip: 'Probar alerta',
             onPressed: _showTestAlert,
           ),
           IconButton(
             icon: const Icon(Icons.my_location),
+            tooltip: 'Mi ubicación',
             onPressed: _getCurrentLocationWeather,
           ),
         ],
       ),
-      body: _buildBody(),
+      body: _buildBody(theme),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(ThemeData theme) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -186,12 +175,12 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
             const SizedBox(height: 16),
             Text(
               _error,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
+              style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -206,26 +195,88 @@ class _HomeScreenState extends State<HomeScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          CitySearch(
-            onCitySelected: _getCityWeather,
-            recentCities: _recentCities,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: CitySearch(onCitySelected: _getCityWeather),
           ),
+
+          if (_recentCities.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Ciudades recientes',
+                  style: theme.textTheme.titleLarge,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 40,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _recentCities.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ActionChip(
+                        label: Text(_recentCities[index].name),
+                        backgroundColor: AppTheme.secondaryColor.withAlpha(50),
+                        labelStyle: TextStyle(color: AppTheme.primaryColor),
+                        onPressed: () {
+                          _getCityWeather(_recentCities[index].name);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 8),
           if (_currentWeather != null) ...[
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Clima actual',
+                  style: theme.textTheme.displaySmall,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: WeatherCard(weather: _currentWeather!),
             ),
-            if (_forecasts.isNotEmpty)
+            if (_forecasts.isNotEmpty) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Pronóstico de 5 días',
+                    style: theme.textTheme.displaySmall,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: ForecastList(forecasts: _forecasts),
               ),
+            ],
             if (_alerts.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: WeatherAlerts(alerts: _alerts),
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 40),
           ],
         ],
       ),

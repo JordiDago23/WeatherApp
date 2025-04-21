@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/alert_model.dart';
+import 'package:weather_app_jml/models/alert_model.dart';
+import 'package:intl/intl.dart';
+import 'package:weather_app_jml/theme/app_theme.dart';
 
 class WeatherAlerts extends StatelessWidget {
   final List<WeatherAlert> alerts;
@@ -12,74 +14,74 @@ class WeatherAlerts extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Alertas meteorológicas', style: theme.textTheme.displaySmall),
+        const SizedBox(height: 8),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: alerts.length,
+          itemBuilder: (context, index) {
+            return AlertCard(alert: alerts[index]);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class AlertCard extends StatelessWidget {
+  final WeatherAlert alert;
+
+  const AlertCard({Key? key, required this.alert}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Colors.red.shade50,
+      margin: const EdgeInsets.only(bottom: 8),
+      color: AppTheme.errorColor.withOpacity(0.2),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.red.shade800,
-                  size: 24,
-                ),
+                Icon(Icons.warning_amber_rounded, color: AppTheme.errorColor),
                 const SizedBox(width: 8),
-                Text(
-                  'Alertas Meteorológicas',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade800,
+                Expanded(
+                  child: Text(
+                    alert.event,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: alerts.length,
-              itemBuilder: (context, index) {
-                final alert = alerts[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (alert.event.isNotEmpty)
-                          Text(
-                            alert.event,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red.shade900,
-                            ),
-                          ),
-                        const SizedBox(height: 4),
-                        Text(
-                          alert.description,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.red.shade900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            const SizedBox(height: 8),
+            Text(alert.description, style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Desde: ${DateFormat('dd/MM HH:mm').format(alert.start)}',
+                  style: theme.textTheme.bodySmall,
+                ),
+                Text(
+                  'Hasta: ${DateFormat('dd/MM HH:mm').format(alert.end)}',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
             ),
           ],
         ),
