@@ -73,9 +73,11 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         posicion.longitude,
       );
 
+      final climaHoy = datos.obtenerClimaPorFecha(DateTime.now());
+
       setState(() {
         _datosClima = datos;
-        _climaActual = datos.climaActual;
+        _climaActual = climaHoy ?? datos.climaActual;
         _pronosticos = datos.pronosticos;
         _alertas = alertas;
         _estaCargando = false;
@@ -108,9 +110,11 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         coordenadas['lon']!,
       );
 
+      final climaHoy = datos.obtenerClimaPorFecha(DateTime.now());
+
       setState(() {
         _datosClima = datos;
-        _climaActual = datos.climaActual;
+        _climaActual = climaHoy ?? datos.climaActual;
         _pronosticos = datos.pronosticos;
         _alertas = alertas;
         _estaCargando = false;
@@ -342,7 +346,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Ciudades recientes',
+                            'Busquedas recientes',
                             style: theme.textTheme.titleLarge,
                           ),
                         ),
