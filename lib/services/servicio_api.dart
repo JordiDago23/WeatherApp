@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import '../models/clima_model.dart';
-import '../models/pronostico_model.dart';
-import '../models/alerta_metereologica_model.dart';
+import 'package:weather_app_jml/models/clima_model.dart';
+import 'package:weather_app_jml/models/pronostico_model.dart';
+import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
 
 class ServicioApi {
   static final String _claveApi = dotenv.env['OPENWEATHERAPIKEY'] ?? '';
@@ -13,22 +13,46 @@ class ServicioApi {
   Future<Map<String, dynamic>> obtenerClimaYPronosticoPorCiudad(
     String ciudad,
   ) async {
-    final respuesta = await http.get(
+    final respuestaClima = await http.get(
+      Uri.parse(
+        '$_urlBase/weather?q=$ciudad&units=metric&appid=$_claveApi&lang=es',
+      ),
+    );
+
+    final respuestaPronostico = await http.get(
       Uri.parse(
         '$_urlBase/forecast?q=$ciudad&units=metric&appid=$_claveApi&lang=es',
       ),
     );
 
-    if (respuesta.statusCode == 200) {
-      final datos = jsonDecode(respuesta.body);
-      final List<dynamic> listaPronostico = datos['list'];
-      final Map<String, dynamic> datosCiudad = datos['city'];
+    if (respuestaClima.statusCode == 200 &&
+        respuestaPronostico.statusCode == 200) {
+      final datosClima = jsonDecode(respuestaClima.body);
+
+      final datosPronostico = jsonDecode(respuestaPronostico.body);
+      final List<dynamic> listaPronostico = datosPronostico['list'];
+      final Map<String, dynamic> datosCiudad = datosPronostico['city'];
 
       List<Pronostico> pronosticos = [];
       String fechaActual = "";
 
+      double tempMin = double.infinity;
+      double tempMax = double.negativeInfinity;
+      String fechaHoy = listaPronostico[0]['dt_txt'].toString().split(' ')[0];
+
       for (var item in listaPronostico) {
         String fecha = item['dt_txt'].toString().split(' ')[0];
+        double temperatura = item['main']['temp'].toDouble();
+
+        if (fecha == fechaHoy) {
+          if (temperatura < tempMin) {
+            tempMin = temperatura;
+          }
+          if (temperatura > tempMax) {
+            tempMax = temperatura;
+          }
+        }
+
         if (fecha != fechaActual) {
           fechaActual = fecha;
           pronosticos.add(Pronostico.fromJson(item));
@@ -36,25 +60,30 @@ class ServicioApi {
         if (pronosticos.length >= 5) break;
       }
 
-      final datosPronosticoPrimero = listaPronostico[0];
+      if (tempMin == double.infinity) tempMin = 0;
+      if (tempMax == double.negativeInfinity) tempMax = 0;
+
+      double temperaturaActual = datosClima['main']['temp'].toDouble();
+      if ((tempMax - temperaturaActual).abs() < 0.5) {
+        tempMax += 1.0;
+      }
+
       final clima = Clima(
         nombreCiudad: datosCiudad['name'],
-        temperatura: datosPronosticoPrimero['main']['temp'].toDouble(),
-        descripcion: datosPronosticoPrimero['weather'][0]['description'],
-        temperaturaMinima:
-            datosPronosticoPrimero['main']['temp_min'].toDouble(),
-        temperaturaMaxima:
-            datosPronosticoPrimero['main']['temp_max'].toDouble(),
-        humedad: datosPronosticoPrimero['main']['humidity'],
-        velocidadViento: datosPronosticoPrimero['wind']['speed'].toDouble(),
-        icono: datosPronosticoPrimero['weather'][0]['icon'],
-        fecha: DateTime.parse(datosPronosticoPrimero['dt_txt']),
+        temperatura: temperaturaActual,
+        descripcion: datosClima['weather'][0]['description'],
+        temperaturaMinima: tempMin,
+        temperaturaMaxima: tempMax,
+        humedad: datosClima['main']['humidity'],
+        velocidadViento: datosClima['wind']['speed'].toDouble(),
+        icono: datosClima['weather'][0]['icon'],
+        fecha: DateTime.fromMillisecondsSinceEpoch(datosClima['dt'] * 1000),
       );
 
       return {'weather': clima, 'forecasts': pronosticos};
     } else {
       throw Exception(
-        'Error al obtener datos meteorológicos: ${respuesta.statusCode}',
+        'Error al obtener datos meteorológicos: ${respuestaPronostico.statusCode}',
       );
     }
   }
@@ -63,22 +92,46 @@ class ServicioApi {
     double latitud,
     double longitud,
   ) async {
-    final respuesta = await http.get(
+    final respuestaClima = await http.get(
+      Uri.parse(
+        '$_urlBase/weather?lat=$latitud&lon=$longitud&units=metric&appid=$_claveApi&lang=es',
+      ),
+    );
+
+    final respuestaPronostico = await http.get(
       Uri.parse(
         '$_urlBase/forecast?lat=$latitud&lon=$longitud&units=metric&appid=$_claveApi&lang=es',
       ),
     );
 
-    if (respuesta.statusCode == 200) {
-      final datos = jsonDecode(respuesta.body);
-      final List<dynamic> listaPronostico = datos['list'];
-      final Map<String, dynamic> datosCiudad = datos['city'];
+    if (respuestaClima.statusCode == 200 &&
+        respuestaPronostico.statusCode == 200) {
+      final datosClima = jsonDecode(respuestaClima.body);
+
+      final datosPronostico = jsonDecode(respuestaPronostico.body);
+      final List<dynamic> listaPronostico = datosPronostico['list'];
+      final Map<String, dynamic> datosCiudad = datosPronostico['city'];
 
       List<Pronostico> pronosticos = [];
       String fechaActual = "";
 
+      double tempMin = double.infinity;
+      double tempMax = double.negativeInfinity;
+      String fechaHoy = listaPronostico[0]['dt_txt'].toString().split(' ')[0];
+
       for (var item in listaPronostico) {
         String fecha = item['dt_txt'].toString().split(' ')[0];
+        double temperatura = item['main']['temp'].toDouble();
+
+        if (fecha == fechaHoy) {
+          if (temperatura < tempMin) {
+            tempMin = temperatura;
+          }
+          if (temperatura > tempMax) {
+            tempMax = temperatura;
+          }
+        }
+
         if (fecha != fechaActual) {
           fechaActual = fecha;
           pronosticos.add(Pronostico.fromJson(item));
@@ -86,25 +139,30 @@ class ServicioApi {
         if (pronosticos.length >= 5) break;
       }
 
-      final datosPronosticoPrimero = listaPronostico[0];
+      if (tempMin == double.infinity) tempMin = 0;
+      if (tempMax == double.negativeInfinity) tempMax = 0;
+
+      double temperaturaActual = datosClima['main']['temp'].toDouble();
+      if ((tempMax - temperaturaActual).abs() < 0.5) {
+        tempMax += 1.0;
+      }
+
       final clima = Clima(
         nombreCiudad: datosCiudad['name'],
-        temperatura: datosPronosticoPrimero['main']['temp'].toDouble(),
-        descripcion: datosPronosticoPrimero['weather'][0]['description'],
-        temperaturaMinima:
-            datosPronosticoPrimero['main']['temp_min'].toDouble(),
-        temperaturaMaxima:
-            datosPronosticoPrimero['main']['temp_max'].toDouble(),
-        humedad: datosPronosticoPrimero['main']['humidity'],
-        velocidadViento: datosPronosticoPrimero['wind']['speed'].toDouble(),
-        icono: datosPronosticoPrimero['weather'][0]['icon'],
-        fecha: DateTime.parse(datosPronosticoPrimero['dt_txt']),
+        temperatura: temperaturaActual,
+        descripcion: datosClima['weather'][0]['description'],
+        temperaturaMinima: tempMin,
+        temperaturaMaxima: tempMax,
+        humedad: datosClima['main']['humidity'],
+        velocidadViento: datosClima['wind']['speed'].toDouble(),
+        icono: datosClima['weather'][0]['icon'],
+        fecha: DateTime.fromMillisecondsSinceEpoch(datosClima['dt'] * 1000),
       );
 
       return {'weather': clima, 'forecasts': pronosticos};
     } else {
       throw Exception(
-        'Error al obtener datos meteorológicos: ${respuesta.statusCode}',
+        'Error al obtener datos meteorológicos: ${respuestaPronostico.statusCode}',
       );
     }
   }

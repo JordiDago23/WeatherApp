@@ -11,44 +11,51 @@ class PronosticoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(right: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: AppTheme.cardColor,
       child: Container(
-        width: 120,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
           children: [
-            Text(
-              DateFormat('E', 'es').format(pronostico.fecha),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  DateFormat('E', 'es').format(pronostico.fecha),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  DateFormat('d MMM', 'es').format(pronostico.fecha),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              DateFormat('d MMM', 'es').format(pronostico.fecha),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            const Spacer(),
             Image.network(
               'https://openweathermap.org/img/wn/${pronostico.icono}.png',
-              width: 40,
-              height: 40,
+              width: 50,
+              height: 50,
             ),
-            Text(
-              '${pronostico.temperatura.round()}°C',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              pronostico.descripcion,
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${pronostico.temperatura.round()}°C',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  pronostico.descripcion,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ],
         ),
@@ -65,10 +72,11 @@ class ListaPronostico extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 160,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: ListView.builder(
-        scrollDirection: Axis.horizontal,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        scrollDirection: Axis.vertical,
         itemCount: pronosticos.length,
         itemBuilder: (context, index) {
           return PronosticoCard(pronostico: pronosticos[index]);
