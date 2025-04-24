@@ -5,90 +5,51 @@ import 'package:geolocator/geolocator.dart';
 import 'package:weather_app_jml/models/clima_model.dart';
 import 'package:weather_app_jml/models/pronostico_model.dart';
 import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
+import 'package:weather_app_jml/models/datos_clima_model.dart';
+import 'package:weather_app_jml/models/ciudad_sugerida_model.dart';
 
 class ServicioApi {
   static final String _claveApi = dotenv.env['OPENWEATHERAPIKEY'] ?? '';
   static const String _urlBase = 'https://api.openweathermap.org/data/2.5';
+  static const String _urlGeo = 'http://api.openweathermap.org/geo/1.0';
 
-  Future<Map<String, dynamic>> obtenerClimaYPronosticoPorCiudad(
-    String ciudad,
-  ) async {
-    final respuestaClima = await http.get(
-      Uri.parse(
-        '$_urlBase/weather?q=$ciudad&units=metric&appid=$_claveApi&lang=es',
-      ),
+  final Map<String, DatosClima> _cacheDatosClima = {};
+
+  Future<List<CiudadSugerida>> buscarCiudades(String consulta) async {
+    if (consulta.isEmpty) return [];
+
+    final respuesta = await http.get(
+      Uri.parse('$_urlGeo/direct?q=$consulta&limit=5&appid=$_claveApi'),
     );
 
-    final respuestaPronostico = await http.get(
-      Uri.parse(
-        '$_urlBase/forecast?q=$ciudad&units=metric&appid=$_claveApi&lang=es',
-      ),
-    );
-
-    if (respuestaClima.statusCode == 200 &&
-        respuestaPronostico.statusCode == 200) {
-      final datosClima = jsonDecode(respuestaClima.body);
-
-      final datosPronostico = jsonDecode(respuestaPronostico.body);
-      final List<dynamic> listaPronostico = datosPronostico['list'];
-      final Map<String, dynamic> datosCiudad = datosPronostico['city'];
-
-      List<Pronostico> pronosticos = [];
-      String fechaActual = "";
-
-      double tempMin = double.infinity;
-      double tempMax = double.negativeInfinity;
-      String fechaHoy = listaPronostico[0]['dt_txt'].toString().split(' ')[0];
-
-      for (var item in listaPronostico) {
-        String fecha = item['dt_txt'].toString().split(' ')[0];
-        double temperatura = item['main']['temp'].toDouble();
-
-        if (fecha == fechaHoy) {
-          if (temperatura < tempMin) {
-            tempMin = temperatura;
-          }
-          if (temperatura > tempMax) {
-            tempMax = temperatura;
-          }
-        }
-
-        if (fecha != fechaActual) {
-          fechaActual = fecha;
-          pronosticos.add(Pronostico.fromJson(item));
-        }
-        if (pronosticos.length >= 5) break;
-      }
-
-      if (tempMin == double.infinity) tempMin = 0;
-      if (tempMax == double.negativeInfinity) tempMax = 0;
-
-      double temperaturaActual = datosClima['main']['temp'].toDouble();
-      if ((tempMax - temperaturaActual).abs() < 0.5) {
-        tempMax += 1.0;
-      }
-
-      final clima = Clima(
-        nombreCiudad: datosCiudad['name'],
-        temperatura: temperaturaActual,
-        descripcion: datosClima['weather'][0]['description'],
-        temperaturaMinima: tempMin,
-        temperaturaMaxima: tempMax,
-        humedad: datosClima['main']['humidity'],
-        velocidadViento: datosClima['wind']['speed'].toDouble(),
-        icono: datosClima['weather'][0]['icon'],
-        fecha: DateTime.fromMillisecondsSinceEpoch(datosClima['dt'] * 1000),
-      );
-
-      return {'weather': clima, 'forecasts': pronosticos};
-    } else {
-      throw Exception(
-        'Error al obtener datos meteorológicos: ${respuestaPronostico.statusCode}',
-      );
+    if (respuesta.statusCode == 200) {
+      final List<dynamic> datos = jsonDecode(respuesta.body);
+      return datos.map((json) => CiudadSugerida.fromJson(json)).toList();
     }
+    return [];
   }
 
-  Future<Map<String, dynamic>> obtenerClimaYPronosticoPorUbicacion(
+  Future<Map<String, double>> obtenerCoordendasCiudad(String ciudad) async {
+    final ciudades = await buscarCiudades(ciudad);
+    if (ciudades.isNotEmpty) {
+      return {'lat': ciudades[0].latitud, 'lon': ciudades[0].longitud};
+    }
+    throw Exception('No se pudieron obtener las coordenadas de la ciudad');
+  }
+
+  Future<DatosClima> obtenerDatosClimaPorCiudad(String ciudad) async {
+    if (_cacheDatosClima.containsKey(ciudad)) {
+      return _cacheDatosClima[ciudad]!;
+    }
+
+    final coordenadas = await obtenerCoordendasCiudad(ciudad);
+    return obtenerDatosClimaPorUbicacion(
+      coordenadas['lat']!,
+      coordenadas['lon']!,
+    );
+  }
+
+  Future<DatosClima> obtenerDatosClimaPorUbicacion(
     double latitud,
     double longitud,
   ) async {
@@ -107,168 +68,161 @@ class ServicioApi {
     if (respuestaClima.statusCode == 200 &&
         respuestaPronostico.statusCode == 200) {
       final datosClima = jsonDecode(respuestaClima.body);
-
       final datosPronostico = jsonDecode(respuestaPronostico.body);
-      final List<dynamic> listaPronostico = datosPronostico['list'];
-      final Map<String, dynamic> datosCiudad = datosPronostico['city'];
 
-      List<Pronostico> pronosticos = [];
-      String fechaActual = "";
+      final datosCompletos = DatosClima.fromJson(datosClima, datosPronostico);
 
-      double tempMin = double.infinity;
-      double tempMax = double.negativeInfinity;
-      String fechaHoy = listaPronostico[0]['dt_txt'].toString().split(' ')[0];
+      _cacheDatosClima[datosCompletos.climaActual.nombreCiudad] =
+          datosCompletos;
 
-      for (var item in listaPronostico) {
-        String fecha = item['dt_txt'].toString().split(' ')[0];
-        double temperatura = item['main']['temp'].toDouble();
-
-        if (fecha == fechaHoy) {
-          if (temperatura < tempMin) {
-            tempMin = temperatura;
-          }
-          if (temperatura > tempMax) {
-            tempMax = temperatura;
-          }
-        }
-
-        if (fecha != fechaActual) {
-          fechaActual = fecha;
-          pronosticos.add(Pronostico.fromJson(item));
-        }
-        if (pronosticos.length >= 5) break;
-      }
-
-      if (tempMin == double.infinity) tempMin = 0;
-      if (tempMax == double.negativeInfinity) tempMax = 0;
-
-      double temperaturaActual = datosClima['main']['temp'].toDouble();
-      if ((tempMax - temperaturaActual).abs() < 0.5) {
-        tempMax += 1.0;
-      }
-
-      final clima = Clima(
-        nombreCiudad: datosCiudad['name'],
-        temperatura: temperaturaActual,
-        descripcion: datosClima['weather'][0]['description'],
-        temperaturaMinima: tempMin,
-        temperaturaMaxima: tempMax,
-        humedad: datosClima['main']['humidity'],
-        velocidadViento: datosClima['wind']['speed'].toDouble(),
-        icono: datosClima['weather'][0]['icon'],
-        fecha: DateTime.fromMillisecondsSinceEpoch(datosClima['dt'] * 1000),
-      );
-
-      return {'weather': clima, 'forecasts': pronosticos};
+      return datosCompletos;
     } else {
-      throw Exception(
-        'Error al obtener datos meteorológicos: ${respuestaPronostico.statusCode}',
-      );
+      throw Exception('Error al obtener datos meteorológicos');
     }
   }
 
   Future<Clima> obtenerClimaPorCiudad(String ciudad) async {
-    final resultado = await obtenerClimaYPronosticoPorCiudad(ciudad);
-    return resultado['weather'];
+    final datos = await obtenerDatosClimaPorCiudad(ciudad);
+    return datos.climaActual;
   }
 
   Future<List<Pronostico>> obtenerPronosticoPorCiudad(String ciudad) async {
-    final resultado = await obtenerClimaYPronosticoPorCiudad(ciudad);
-    return resultado['forecasts'];
+    final datos = await obtenerDatosClimaPorCiudad(ciudad);
+    return datos.pronosticos;
   }
 
   Future<Clima> obtenerClimaPorUbicacion(
     double latitud,
     double longitud,
   ) async {
-    final resultado = await obtenerClimaYPronosticoPorUbicacion(
-      latitud,
-      longitud,
-    );
-    return resultado['weather'];
+    final datos = await obtenerDatosClimaPorUbicacion(latitud, longitud);
+    return datos.climaActual;
   }
 
   Future<List<Pronostico>> obtenerPronosticoPorUbicacion(
     double latitud,
     double longitud,
   ) async {
-    final resultado = await obtenerClimaYPronosticoPorUbicacion(
-      latitud,
-      longitud,
-    );
-    return resultado['forecasts'];
+    final datos = await obtenerDatosClimaPorUbicacion(latitud, longitud);
+    return datos.pronosticos;
+  }
+
+  Future<Position> obtenerUbicacionActual() async {
+    bool servicioHabilitado = await Geolocator.isLocationServiceEnabled();
+    if (!servicioHabilitado) {
+      throw Exception('Los servicios de ubicación están deshabilitados.');
+    }
+
+    LocationPermission permiso = await Geolocator.checkPermission();
+    if (permiso == LocationPermission.denied) {
+      permiso = await Geolocator.requestPermission();
+      if (permiso == LocationPermission.denied) {
+        throw Exception('Los permisos de ubicación fueron denegados');
+      }
+    }
+
+    if (permiso == LocationPermission.deniedForever) {
+      throw Exception(
+        'Los permisos de ubicación están permanentemente denegados.',
+      );
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<Clima> obtenerClimaPorFecha(
+    double latitud,
+    double longitud,
+    DateTime fecha,
+  ) async {
+    final datos = await obtenerDatosClimaPorUbicacion(latitud, longitud);
+    final climaFecha = datos.obtenerClimaPorFecha(fecha);
+    if (climaFecha == null) {
+      throw Exception('No se encontraron datos para la fecha especificada');
+    }
+    return climaFecha;
   }
 
   Future<List<AlertaMetereologica>> obtenerAlertasMeteorologicas(
     double latitud,
     double longitud,
   ) async {
-    try {
-      final respuesta = await http.get(
-        Uri.parse(
-          'https://api.openweathermap.org/data/3.0/onecall?lat=$latitud&lon=$longitud&exclude=current,minutely,hourly,daily&appid=$_claveApi&lang=es',
-        ),
-      );
+    final respuesta = await http.get(
+      Uri.parse(
+        '$_urlBase/forecast?lat=$latitud&lon=$longitud&units=metric&appid=$_claveApi&lang=es',
+      ),
+    );
 
-      if (respuesta.statusCode == 200) {
-        final datos = jsonDecode(respuesta.body);
-        List<AlertaMetereologica> alertas = [];
+    if (respuesta.statusCode == 200) {
+      final datos = jsonDecode(respuesta.body);
+      final List<AlertaMetereologica> alertas = [];
 
-        if (datos.containsKey('alerts')) {
-          final List<dynamic> listaAlertas = datos['alerts'];
-          for (var alerta in listaAlertas) {
-            alertas.add(AlertaMetereologica.fromJson(alerta));
+      if (datos['list'] != null) {
+        for (var item in datos['list']) {
+          final temp = item['main']['temp'].toDouble();
+          final velocidadViento = item['wind']['speed'].toDouble();
+          final descripcion =
+              item['weather'][0]['description'].toString().toLowerCase();
+          final dt = DateTime.fromMillisecondsSinceEpoch(item['dt'] * 1000);
+
+          if (temp > 35) {
+            alertas.add(
+              AlertaMetereologica(
+                evento: 'Temperatura extremadamente alta',
+                descripcion: 'La temperatura superará los 35°C',
+                inicio: dt.toString(),
+                fin: dt.add(const Duration(hours: 1)).toString(),
+                remitente: 'Sistema de Alertas Meteorológicas',
+                tipo: 'Temperatura',
+              ),
+            );
+          } else if (temp < 0) {
+            alertas.add(
+              AlertaMetereologica(
+                evento: 'Temperatura bajo cero',
+                descripcion: 'La temperatura descenderá por debajo de 0°C',
+                inicio: dt.toString(),
+                fin: dt.add(const Duration(hours: 1)).toString(),
+                remitente: 'Sistema de Alertas Meteorológicas',
+                tipo: 'Temperatura',
+              ),
+            );
+          }
+
+          if (velocidadViento > 20) {
+            alertas.add(
+              AlertaMetereologica(
+                evento: 'Vientos fuertes',
+                descripcion:
+                    'Se esperan vientos con velocidades superiores a 20 m/s',
+                inicio: dt.toString(),
+                fin: dt.add(const Duration(hours: 1)).toString(),
+                remitente: 'Sistema de Alertas Meteorológicas',
+                tipo: 'Viento',
+              ),
+            );
+          }
+
+          if (descripcion.contains('tormenta') ||
+              descripcion.contains('lluvia fuerte') ||
+              descripcion.contains('granizo')) {
+            alertas.add(
+              AlertaMetereologica(
+                evento: 'Condiciones severas',
+                descripcion: 'Se esperan ${item['weather'][0]['description']}',
+                inicio: dt.toString(),
+                fin: dt.add(const Duration(hours: 1)).toString(),
+                remitente: 'Sistema de Alertas Meteorológicas',
+                tipo: 'Tormenta',
+              ),
+            );
           }
         }
-
-        return alertas;
-      } else {
-        return [];
       }
-    } catch (e) {
-      return [];
-    }
-  }
 
-  Future<Position> obtenerUbicacionActual() async {
-    bool servicioHabilitado = await Geolocator.isLocationServiceEnabled();
-    if (!servicioHabilitado) {
-      throw Exception('Servicios de ubicación desactivados');
-    }
-
-    LocationPermission permiso = await Geolocator.checkPermission();
-    if (permiso == LocationPermission.denied) {
-      permiso = await Geolocator.requestPermission();
-    }
-
-    if (permiso == LocationPermission.denied ||
-        permiso == LocationPermission.deniedForever) {
-      throw Exception('Permisos de ubicación denegados');
-    }
-
-    return await Geolocator.getCurrentPosition();
-  }
-
-  Future<Map<String, double>> obtenerCoordendasCiudad(String ciudad) async {
-    try {
-      final respuesta = await http.get(
-        Uri.parse('$_urlBase/weather?q=$ciudad&appid=$_claveApi'),
-      );
-
-      if (respuesta.statusCode == 200) {
-        final datos = jsonDecode(respuesta.body);
-        final Map<String, dynamic> coordenadas = datos['coord'];
-        return {
-          'lat': coordenadas['lat'].toDouble(),
-          'lon': coordenadas['lon'].toDouble(),
-        };
-      } else {
-        throw Exception(
-          'Error al obtener coordenadas: ${respuesta.statusCode}',
-        );
-      }
-    } catch (e) {
-      throw Exception('Error al obtener coordenadas: $e');
+      return alertas;
+    } else {
+      throw Exception('Error al obtener alertas meteorológicas');
     }
   }
 }

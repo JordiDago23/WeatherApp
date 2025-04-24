@@ -27,21 +27,17 @@ class AppTheme {
         error: alertColor,
         brightness: Brightness.light,
       ),
-
       scaffoldBackgroundColor: backgroundColor,
-
       appBarTheme: const AppBarTheme(
         backgroundColor: primaryColor,
         foregroundColor: textColorLight,
         elevation: 0,
       ),
-
       cardTheme: CardTheme(
         color: cardColor,
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
@@ -50,7 +46,6 @@ class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
-
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: cardColor,
@@ -71,7 +66,6 @@ class AppTheme {
           vertical: 16,
         ),
       ),
-
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           color: textColorPrimary,

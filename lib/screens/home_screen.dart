@@ -3,13 +3,14 @@ import 'package:weather_app_jml/models/clima_model.dart';
 import 'package:weather_app_jml/models/pronostico_model.dart';
 import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
 import 'package:weather_app_jml/models/ciudad_model.dart';
+import 'package:weather_app_jml/models/datos_clima_model.dart';
 import 'package:weather_app_jml/services/servicio_api.dart';
 import 'package:weather_app_jml/services/shared_preferences_service.dart';
 import 'package:weather_app_jml/widgets/clima_actual_card.dart';
-import 'package:weather_app_jml/widgets/pronostico_card.dart';
 import 'package:weather_app_jml/widgets/buscador_ciudad.dart';
 import 'package:weather_app_jml/screens/alerta_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
+import 'package:weather_app_jml/widgets/lista_pronostico.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,6 +28,8 @@ class _EstadoHomeScreen extends State<HomeScreen> {
   List<Pronostico> _pronosticos = [];
   List<AlertaMetereologica> _alertas = [];
   List<Ciudad> _ciudadesRecientes = [];
+  Pronostico? _pronosticoSeleccionado;
+  DatosClima? _datosClima;
 
   bool _estaCargando = false;
   String _error = '';
@@ -60,12 +63,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     try {
       final posicion = await _servicioApi.obtenerUbicacionActual();
 
-      final clima = await _servicioApi.obtenerClimaPorUbicacion(
-        posicion.latitude,
-        posicion.longitude,
-      );
-
-      final pronosticos = await _servicioApi.obtenerPronosticoPorUbicacion(
+      final datos = await _servicioApi.obtenerDatosClimaPorUbicacion(
         posicion.latitude,
         posicion.longitude,
       );
@@ -76,13 +74,16 @@ class _EstadoHomeScreen extends State<HomeScreen> {
       );
 
       setState(() {
-        _climaActual = clima;
-        _pronosticos = pronosticos;
+        _datosClima = datos;
+        _climaActual = datos.climaActual;
+        _pronosticos = datos.pronosticos;
         _alertas = alertas;
         _estaCargando = false;
       });
 
-      await _servicioSharedPreferences.addCiudadesRecientes(clima.nombreCiudad);
+      await _servicioSharedPreferences.addCiudadesRecientes(
+        datos.climaActual.nombreCiudad,
+      );
       await _cargarCiudadesRecientes();
     } catch (e) {
       setState(() {
@@ -99,20 +100,18 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     });
 
     try {
-      final clima = await _servicioApi.obtenerClimaPorCiudad(ciudad);
-
-      final pronosticos = await _servicioApi.obtenerPronosticoPorCiudad(ciudad);
+      final datos = await _servicioApi.obtenerDatosClimaPorCiudad(ciudad);
 
       final coordenadas = await _servicioApi.obtenerCoordendasCiudad(ciudad);
-
       final alertas = await _servicioApi.obtenerAlertasMeteorologicas(
         coordenadas['lat']!,
         coordenadas['lon']!,
       );
 
       setState(() {
-        _climaActual = clima;
-        _pronosticos = pronosticos;
+        _datosClima = datos;
+        _climaActual = datos.climaActual;
+        _pronosticos = datos.pronosticos;
         _alertas = alertas;
         _estaCargando = false;
       });
@@ -125,6 +124,53 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         _estaCargando = false;
       });
     }
+  }
+
+  void _actualizarClimaConPronostico(Pronostico pronostico) {
+    if (_datosClima == null) return;
+
+    final climaFecha = _datosClima!.obtenerClimaPorFecha(pronostico.fecha);
+    if (climaFecha != null) {
+      setState(() {
+        _pronosticoSeleccionado = pronostico;
+        _climaActual = climaFecha;
+      });
+    }
+  }
+
+  Widget _buildClimaActual() {
+    if (_climaActual == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_pronosticoSeleccionado != null) {
+      final pronostico = _pronosticoSeleccionado!;
+      final climaTemporal = Clima(
+        nombreCiudad: _climaActual!.nombreCiudad,
+        temperatura: pronostico.temperatura,
+        descripcion: pronostico.descripcion,
+        temperaturaMinima: _climaActual!.temperaturaMinima,
+        temperaturaMaxima: _climaActual!.temperaturaMaxima,
+        humedad: pronostico.humedad,
+        velocidadViento: pronostico.velocidadViento,
+        icono: pronostico.icono,
+        fecha: pronostico.fecha,
+      );
+      return ClimaActualCard(clima: climaTemporal);
+    }
+
+    return ClimaActualCard(clima: _climaActual!);
+  }
+
+  Widget _buildListaPronosticos() {
+    if (_pronosticos.isEmpty) {
+      return const Center(child: Text('No hay pronósticos disponibles'));
+    }
+
+    return ListaPronostico(
+      pronosticos: _pronosticos,
+      onPronosticoSeleccionado: _actualizarClimaConPronostico,
+    );
   }
 
   void _mostrarAlertas() {
@@ -278,122 +324,73 @@ class _EstadoHomeScreen extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _buildBody(theme),
-    );
-  }
-
-  Widget _buildBody(ThemeData theme) {
-    if (_estaCargando) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error.isNotEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: AppTheme.alertColor),
-            const SizedBox(height: 16),
-            Text(
-              _error,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _obtenerClimaUbicacionActual,
-              child: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: BuscadorCiudad(onCitySelected: _obtenerClimaCiudadBuscada),
-          ),
-
-          if (_ciudadesRecientes.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Ciudades recientes',
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 40,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _ciudadesRecientes.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ActionChip(
-                        label: Text(_ciudadesRecientes[index].nombre),
-                        backgroundColor: AppTheme.secondaryColor.withAlpha(50),
-                        labelStyle: TextStyle(color: AppTheme.primaryColor),
-                        onPressed: () {
-                          _obtenerClimaCiudadBuscada(
-                            _ciudadesRecientes[index].nombre,
-                          );
-                        },
+      body:
+          _estaCargando
+              ? const Center(child: CircularProgressIndicator())
+              : _error.isNotEmpty
+              ? Center(child: Text(_error))
+              : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      BuscadorCiudad(
+                        onCitySelected: _obtenerClimaCiudadBuscada,
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 8),
-          if (_climaActual != null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Clima actual',
-                  style: theme.textTheme.displaySmall,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ClimaActualCard(clima: _climaActual!),
-            ),
-            if (_pronosticos.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Pronóstico de 5 días',
-                    style: theme.textTheme.displaySmall,
+                      if (_ciudadesRecientes.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Ciudades recientes',
+                            style: theme.textTheme.titleLarge,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 40,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _ciudadesRecientes.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ActionChip(
+                                  label: Text(_ciudadesRecientes[index].nombre),
+                                  backgroundColor: AppTheme.secondaryColor
+                                      .withAlpha(50),
+                                  labelStyle: TextStyle(
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                  onPressed: () {
+                                    _obtenerClimaCiudadBuscada(
+                                      _ciudadesRecientes[index].nombre,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      _buildClimaActual(),
+                      if (_pronosticos.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Pronóstico de 5 días',
+                            style: theme.textTheme.displaySmall,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildListaPronosticos(),
+                      ],
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                child: ListaPronostico(pronosticos: _pronosticos),
-              ),
-            ],
-          ],
-        ],
-      ),
     );
   }
 }
