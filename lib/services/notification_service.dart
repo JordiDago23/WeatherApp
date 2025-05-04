@@ -81,7 +81,7 @@ class NotificationService {
     int id = 0,
   }) async {
     await mostrarNotificacionInstantanea(
-      'Alerta: $tipoAlerta en $nombreCiudad',
+      '$tipoAlerta en $nombreCiudad',
       descripcion,
       id: id,
     );
