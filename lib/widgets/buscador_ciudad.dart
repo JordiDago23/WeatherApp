@@ -85,6 +85,7 @@ class _BuscadorCiudadState extends State<BuscadorCiudad> {
           Container(
             margin: const EdgeInsets.only(top: 8),
             decoration: BoxDecoration(
+              color: AppTheme.cardColor,
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -95,7 +96,10 @@ class _BuscadorCiudadState extends State<BuscadorCiudad> {
               itemBuilder: (context, index) {
                 final ciudad = _sugerencias[index];
                 return ListTile(
-                  title: Text(ciudad.nombreCompleto),
+                  title: Text(
+                    ciudad.nombreCompleto,
+                    style: TextStyle(color: AppTheme.textColorPrimary),
+                  ),
                   onTap: () => _seleccionarCiudad(ciudad),
                 );
               },

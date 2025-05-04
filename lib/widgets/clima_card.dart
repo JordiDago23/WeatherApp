@@ -122,10 +122,17 @@ class ClimaCard extends StatelessWidget {
     if (datos.isEmpty) return const SizedBox.shrink();
     final minTemp = datos.map((e) => e.value).reduce((a, b) => a < b ? a : b);
     final maxTemp = datos.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-    final List<int> yLabels = [];
-    for (int i = 0; i < 4; i++) {
-      final val = minTemp + (maxTemp - minTemp) * i / 3;
-      yLabels.add(val.round());
+    final int salto = 2;
+    final int minY = minTemp.round();
+    final int maxY = (((maxTemp.round()) / salto).ceil()) * salto;
+    List<int> yLabels = [];
+
+    int val = minY;
+    yLabels.add(val);
+    val += salto;
+    while (val <= maxY) {
+      yLabels.add(val);
+      val += salto;
     }
     List<int> labelIndices = [];
     if (datos.length <= 6) {
@@ -149,8 +156,8 @@ class ClimaCard extends StatelessWidget {
         height: 120,
         child: LineChart(
           LineChartData(
-            minY: minTemp,
-            maxY: maxTemp,
+            minY: minY.toDouble(),
+            maxY: maxY.toDouble(),
             titlesData: FlTitlesData(
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(

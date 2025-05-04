@@ -394,6 +394,15 @@ class _EstadoHomeScreen extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final Gradient fondo =
+        _climaActual != null
+            ? _obtenerFondoPorIcono(_climaActual!.icono)
+            : LinearGradient(
+              colors: [
+                AppTheme.backgroundColor,
+                AppTheme.primaryColor.withAlpha(80),
+              ],
+            );
 
     return Scaffold(
       appBar: AppBar(
@@ -411,81 +420,174 @@ class _EstadoHomeScreen extends State<HomeScreen> {
           ),
         ],
       ),
-      body:
-          _estaCargando
-              ? const Center(child: CircularProgressIndicator())
-              : _error.isNotEmpty
-              ? Center(child: Text(_error))
-              : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      BuscadorCiudad(
-                        onCitySelected: _obtenerClimaCiudadBuscada,
-                      ),
-                      if (_ciudadesRecientes.isNotEmpty) ...[
+      body: Container(
+        decoration: BoxDecoration(gradient: fondo),
+        child:
+            _estaCargando
+                ? const Center(child: CircularProgressIndicator())
+                : _error.isNotEmpty
+                ? Center(child: Text(_error))
+                : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        BuscadorCiudad(
+                          onCitySelected: _obtenerClimaCiudadBuscada,
+                        ),
+                        if (_ciudadesRecientes.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Busquedas recientes',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: _colorTituloPorIcono(
+                                  _climaActual?.icono ?? '',
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 40,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _ciudadesRecientes.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ActionChip(
+                                    label: Text(
+                                      _ciudadesRecientes[index].nombre,
+                                    ),
+                                    backgroundColor: AppTheme.cardColor,
+                                    labelStyle: TextStyle(
+                                      color: AppTheme.textColorPrimary,
+                                    ),
+                                    onPressed: () {
+                                      _obtenerClimaCiudadBuscada(
+                                        _ciudadesRecientes[index].nombre,
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Busquedas recientes',
-                            style: theme.textTheme.titleLarge,
+                            'Clima actual',
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              color: _colorTituloPorIcono(
+                                _climaActual?.icono ?? '',
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
-                        SizedBox(
-                          height: 40,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _ciudadesRecientes.length,
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ActionChip(
-                                  label: Text(_ciudadesRecientes[index].nombre),
-                                  backgroundColor: AppTheme.secondaryColor
-                                      .withAlpha(50),
-                                  labelStyle: TextStyle(
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                  onPressed: () {
-                                    _obtenerClimaCiudadBuscada(
-                                      _ciudadesRecientes[index].nombre,
-                                    );
-                                  },
+                        _buildClimaActual(),
+                        if (_pronosticos.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Pronóstico próximos 4 días',
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                color: _colorTituloPorIcono(
+                                  _climaActual?.icono ?? '',
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          _buildListaPronosticos(),
+                        ],
                       ],
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Clima actual',
-                          style: theme.textTheme.displaySmall,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildClimaActual(),
-                      if (_pronosticos.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Pronóstico próximos 4 días',
-                            style: theme.textTheme.displaySmall,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildListaPronosticos(),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
+      ),
     );
+  }
+
+  Gradient _obtenerFondoPorIcono(String icono) {
+    switch (icono) {
+      case '01d': // Soleado día
+        return const LinearGradient(
+          colors: [Color(0xFF56CCF2), Color(0xFFB2FEFA)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case '01n': // Soleado noche
+        return const LinearGradient(
+          colors: [Color(0xFF232526), Color(0xFF485563)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case '02d': // Parcialmente nublado día
+      case '03d':
+      case '04d':
+        return const LinearGradient(
+          colors: [Color(0xFFD7DDE8), Color(0xFF757F9A)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case '02n': // Parcialmente nublado noche
+      case '03n':
+      case '04n':
+        return const LinearGradient(
+          colors: [Color(0xFF434C5E), Color(0xFF232526)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case '09d': // Lluvia
+      case '09n':
+      case '10d':
+      case '10n':
+        return const LinearGradient(
+          colors: [Color(0xFF5D7697), Color(0xFFB0BEC5)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case '11d': // Tormenta
+      case '11n':
+        return const LinearGradient(
+          colors: [Color(0xFF373B44), Color(0xFF5F72BD)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case '13d': // Nieve
+      case '13n':
+        return const LinearGradient(
+          colors: [Color(0xFFe0eafc), Color(0xFFcfdef3)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case '50d': // Niebla
+      case '50n':
+        return const LinearGradient(
+          colors: [Color(0xFFd7dde8), Color(0xFFb8c6db)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      default:
+        return const LinearGradient(
+          colors: [Color(0xFFB2FEFA), Color(0xFFE0EAFC)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+    }
+  }
+
+  Color _colorTituloPorIcono(String icono) {
+    const iconosClaros = ['01d', '13d', '13n', '50d', '50n', ''];
+    if (iconosClaros.contains(icono)) {
+      return AppTheme.textColorPrimary;
+    }
+    return Colors.white;
   }
 }
