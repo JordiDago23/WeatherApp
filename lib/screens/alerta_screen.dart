@@ -16,7 +16,10 @@ class AlertaScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alerta Meteorológica'),
-        backgroundColor: AppTheme.alertColor,
+        backgroundColor:
+            Theme.of(context).brightness == Brightness.dark
+                ? AppTheme.alertButtonDark
+                : AppTheme.alertColor,
         foregroundColor: AppTheme.textColorLight,
         automaticallyImplyLeading: false,
       ),
@@ -29,14 +32,24 @@ class AlertaScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.alertColor.withAlpha(51),
+                  color:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? AppTheme.alertColor.withAlpha(
+                            AppTheme.alertBgAlphaDark,
+                          )
+                          : AppTheme.alertColor.withAlpha(
+                            AppTheme.alertBgAlphaLight,
+                          ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.warning_amber_rounded,
-                      color: AppTheme.alertColor,
+                      color:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppTheme.alertColor
+                              : AppTheme.alertColor,
                       size: 48,
                     ),
                     const SizedBox(width: 16),
@@ -133,7 +146,10 @@ class AlertaScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onClose,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.alertColor,
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? AppTheme.alertButtonDark
+                            : AppTheme.alertColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(

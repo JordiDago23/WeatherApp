@@ -78,7 +78,7 @@ class _BuscadorCiudadState extends State<BuscadorCiudad> {
         ),
         if (_estaBuscando)
           const Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8),
             child: CircularProgressIndicator(),
           )
         else if (_sugerencias.isNotEmpty)

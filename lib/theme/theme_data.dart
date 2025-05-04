@@ -6,6 +6,7 @@ class AppTheme {
   static const Color backgroundColor = Color(0xFFF5F5F5);
   static const Color cardColor = Color(0xFFFFFFFF);
   static const Color alertColor = Color(0xFFE57373);
+  static const Color darkAlertColor = Color(0xFFB75D5D);
 
   static const Color temperaturaAltaColor = Color(0xFFF44336);
   static const Color temperaturaBajaColor = Color(0xFF42A5F5);
@@ -20,6 +21,10 @@ class AppTheme {
   static const Color darkCardColor = Color(0xFF1E1E1E);
   static const Color darkTextColorPrimary = Color(0xFFEEEEEE);
   static const Color darkTextColorSecondary = Color(0xFFB0B0B0);
+
+  static const int alertBgAlphaLight = 100;
+  static const int alertBgAlphaDark = 100;
+  static const Color alertButtonDark = Color(0xFFDB5A5A);
 
   static ThemeData modoClaro() {
     return ThemeData(
@@ -105,7 +110,7 @@ class AppTheme {
         onPrimary: textColorLight,
         secondary: secondaryColor,
         onSecondary: darkTextColorPrimary,
-        error: alertColor,
+        error: darkAlertColor,
         onError: textColorLight,
         surface: Color(0xFF232A34),
         onSurface: darkTextColorPrimary,
