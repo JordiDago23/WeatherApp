@@ -462,8 +462,8 @@ class _EstadoHomeScreen extends State<HomeScreen> {
               return IconButton(
                 icon: Icon(
                   mode == ThemeMode.dark
-                      ? Icons.wb_sunny
-                      : Icons.nightlight_round,
+                      ? Icons.nightlight_round
+                      : Icons.wb_sunny,
                 ),
                 tooltip: mode == ThemeMode.dark ? 'Modo claro' : 'Modo oscuro',
                 onPressed: () {
