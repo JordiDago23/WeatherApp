@@ -21,7 +21,7 @@ class ClimaCard extends StatelessWidget {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: AppTheme.cardColor,
+      color: Theme.of(context).cardColor,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

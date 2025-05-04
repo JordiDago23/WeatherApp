@@ -15,6 +15,7 @@ class PronosticoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Theme.of(context).cardColor,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -24,7 +25,9 @@ class PronosticoCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   DateFormat('EEEE', 'es').format(pronostico.fecha),
-                  style: const TextStyle(fontSize: 16),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontSize: 16),
                 ),
               ),
               const SizedBox(width: 16),
@@ -40,14 +43,16 @@ class PronosticoCard extends StatelessWidget {
                   children: [
                     Text(
                       '${pronostico.temperatura.round()}°C',
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       pronostico.descripcion,
-                      style: const TextStyle(fontSize: 14),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 14),
                     ),
                   ],
                 ),

@@ -85,8 +85,8 @@ class _BuscadorCiudadState extends State<BuscadorCiudad> {
           Container(
             margin: const EdgeInsets.only(top: 8),
             decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              border: Border.all(color: Colors.grey.shade300),
+              color: Theme.of(context).cardColor,
+              border: Border.all(color: Theme.of(context).cardColor),
               borderRadius: BorderRadius.circular(8),
             ),
             child: ListView.builder(
@@ -98,7 +98,9 @@ class _BuscadorCiudadState extends State<BuscadorCiudad> {
                 return ListTile(
                   title: Text(
                     ciudad.nombreCompleto,
-                    style: TextStyle(color: AppTheme.textColorPrimary),
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
                   ),
                   onTap: () => _seleccionarCiudad(ciudad),
                 );

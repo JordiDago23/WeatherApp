@@ -12,6 +12,32 @@ import 'package:weather_app_jml/screens/alerta_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
 import 'package:weather_app_jml/widgets/pronostico_card.dart';
 import 'package:weather_app_jml/services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light);
+
+Future<void> cargarTemaGuardado() async {
+  final prefs = await SharedPreferences.getInstance();
+  final modo = prefs.getString('theme_mode');
+  if (modo == 'dark') {
+    themeModeNotifier.value = ThemeMode.dark;
+  } else if (modo == 'light') {
+    themeModeNotifier.value = ThemeMode.light;
+  } else if (modo == 'system') {
+    themeModeNotifier.value = ThemeMode.system;
+  }
+}
+
+Future<void> guardarTema(ThemeMode mode) async {
+  final prefs = await SharedPreferences.getInstance();
+  if (mode == ThemeMode.dark) {
+    await prefs.setString('theme_mode', 'dark');
+  } else if (mode == ThemeMode.light) {
+    await prefs.setString('theme_mode', 'light');
+  } else {
+    await prefs.setString('theme_mode', 'system');
+  }
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -430,6 +456,25 @@ class _EstadoHomeScreen extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Weather App JML'),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeModeNotifier,
+            builder: (context, mode, _) {
+              return IconButton(
+                icon: Icon(
+                  mode == ThemeMode.dark
+                      ? Icons.wb_sunny
+                      : Icons.nightlight_round,
+                ),
+                tooltip: mode == ThemeMode.dark ? 'Modo claro' : 'Modo oscuro',
+                onPressed: () {
+                  final nuevoModo =
+                      mode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+                  themeModeNotifier.value = nuevoModo;
+                  guardarTema(nuevoModo);
+                },
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.warning_amber_rounded),
             tooltip: 'Ver alertas meteorológicas',
@@ -482,10 +527,22 @@ class _EstadoHomeScreen extends State<HomeScreen> {
                                   child: ActionChip(
                                     label: Text(
                                       _ciudadesRecientes[index].nombre,
+                                      style: TextStyle(
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).chipTheme.labelStyle?.color ??
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                      ),
                                     ),
-                                    backgroundColor: AppTheme.cardColor,
-                                    labelStyle: TextStyle(
-                                      color: AppTheme.textColorPrimary,
+                                    backgroundColor:
+                                        Theme.of(
+                                          context,
+                                        ).chipTheme.backgroundColor,
+                                    side: BorderSide(
+                                      color: Theme.of(context).cardColor,
                                     ),
                                     onPressed: () {
                                       _obtenerClimaCiudadBuscada(
@@ -606,10 +663,19 @@ class _EstadoHomeScreen extends State<HomeScreen> {
   }
 
   Color _colorTituloPorIcono(String icono) {
-    const iconosClaros = ['01d', '13d', '13n', '50d', '50n', ''];
-    if (iconosClaros.contains(icono)) {
-      return AppTheme.textColorPrimary;
+    switch (icono) {
+      case '01d':
+      case '13d':
+      case '13n':
+      case '50d':
+      case '50n':
+      case '09d':
+      case '09n':
+      case '10d':
+      case '10n':
+        return AppTheme.textColorPrimary;
+      default:
+        return Colors.white;
     }
-    return Colors.white;
   }
 }

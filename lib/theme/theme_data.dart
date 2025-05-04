@@ -24,13 +24,16 @@ class AppTheme {
   static ThemeData modoClaro() {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: backgroundColor,
-        error: alertColor,
+      colorScheme: ColorScheme(
         brightness: Brightness.light,
+        primary: primaryColor,
+        onPrimary: textColorLight,
+        secondary: secondaryColor,
+        onSecondary: textColorPrimary,
+        error: alertColor,
+        onError: textColorLight,
+        surface: cardColor,
+        onSurface: textColorPrimary,
       ),
       scaffoldBackgroundColor: backgroundColor,
       appBarTheme: const AppBarTheme(
@@ -96,22 +99,25 @@ class AppTheme {
   static ThemeData modoOscuro() {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: darkCardColor,
-        error: alertColor,
+      colorScheme: ColorScheme(
         brightness: Brightness.dark,
+        primary: primaryColor,
+        onPrimary: textColorLight,
+        secondary: secondaryColor,
+        onSecondary: darkTextColorPrimary,
+        error: alertColor,
+        onError: textColorLight,
+        surface: Color(0xFF232A34),
+        onSurface: darkTextColorPrimary,
       ),
-      scaffoldBackgroundColor: darkBackgroundColor,
+      scaffoldBackgroundColor: Color(0xFF181C22),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF1A1A1A),
+        backgroundColor: Color(0xFF102840),
         foregroundColor: textColorLight,
         elevation: 0,
       ),
       cardTheme: CardTheme(
-        color: darkCardColor,
+        color: Color(0xFF232A34),
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -125,7 +131,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkCardColor,
+        fillColor: Color(0xFF232A34),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

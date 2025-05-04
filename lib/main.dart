@@ -23,6 +23,7 @@ void main() async {
   }
 
   await initializeDateFormatting('es');
+  await cargarTemaGuardado();
 
   runApp(const MyApp());
 }
@@ -32,18 +33,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Weather App JML',
-      theme: AppTheme.modoClaro(),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('es'), Locale('en')],
-      locale: const Locale('es'),
-      home: const HomeScreen(),
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeModeNotifier,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Weather App JML',
+          theme: AppTheme.modoClaro(),
+          darkTheme: AppTheme.modoOscuro(),
+          themeMode: mode,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('es'), Locale('en')],
+          locale: const Locale('es'),
+          home: const HomeScreen(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }
