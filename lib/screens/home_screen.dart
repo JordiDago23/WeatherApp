@@ -11,7 +11,6 @@ import 'package:weather_app_jml/widgets/buscador_ciudad.dart';
 import 'package:weather_app_jml/screens/alerta_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
 import 'package:weather_app_jml/widgets/pronostico_card.dart';
-import 'package:weather_app_jml/widgets/lista_pronostico.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
