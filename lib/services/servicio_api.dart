@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import 'package:weather_app_jml/models/clima_model.dart';
-import 'package:weather_app_jml/models/pronostico_model.dart';
 import 'package:weather_app_jml/models/alerta_metereologica_model.dart';
 import 'package:weather_app_jml/models/datos_clima_model.dart';
 import 'package:weather_app_jml/models/ciudad_sugerida_model.dart';
@@ -43,68 +41,35 @@ class ServicioApi {
     }
 
     final coordenadas = await obtenerCoordendasCiudad(ciudad);
-    return obtenerDatosClimaPorUbicacion(
+    final resultado = await obtenerDatosClimaPorUbicacionConJson(
       coordenadas['lat']!,
       coordenadas['lon']!,
     );
+    return resultado['modelo'] as DatosClima;
   }
 
-  Future<DatosClima> obtenerDatosClimaPorUbicacion(
+  Future<Map<String, dynamic>> obtenerDatosClimaPorUbicacionConJson(
     double latitud,
     double longitud,
   ) async {
-    final respuestaClima = await http.get(
-      Uri.parse(
-        '$_urlBase/weather?lat=$latitud&lon=$longitud&units=metric&appid=$_claveApi&lang=es',
-      ),
-    );
-
     final respuestaPronostico = await http.get(
       Uri.parse(
         '$_urlBase/forecast?lat=$latitud&lon=$longitud&units=metric&appid=$_claveApi&lang=es',
       ),
     );
 
-    if (respuestaClima.statusCode == 200 &&
-        respuestaPronostico.statusCode == 200) {
-      final datosClima = jsonDecode(respuestaClima.body);
+    if (respuestaPronostico.statusCode == 200) {
       final datosPronostico = jsonDecode(respuestaPronostico.body);
 
-      final datosCompletos = DatosClima.fromJson(datosClima, datosPronostico);
+      final datosCompletos = DatosClima.fromJson(datosPronostico);
 
       _cacheDatosClima[datosCompletos.climaActual.nombreCiudad] =
           datosCompletos;
 
-      return datosCompletos;
+      return {'modelo': datosCompletos, 'jsonPronostico': datosPronostico};
     } else {
       throw Exception('Error al obtener datos meteorológicos');
     }
-  }
-
-  Future<Clima> obtenerClimaPorCiudad(String ciudad) async {
-    final datos = await obtenerDatosClimaPorCiudad(ciudad);
-    return datos.climaActual;
-  }
-
-  Future<List<Pronostico>> obtenerPronosticoPorCiudad(String ciudad) async {
-    final datos = await obtenerDatosClimaPorCiudad(ciudad);
-    return datos.pronosticos;
-  }
-
-  Future<Clima> obtenerClimaPorUbicacion(
-    double latitud,
-    double longitud,
-  ) async {
-    final datos = await obtenerDatosClimaPorUbicacion(latitud, longitud);
-    return datos.climaActual;
-  }
-
-  Future<List<Pronostico>> obtenerPronosticoPorUbicacion(
-    double latitud,
-    double longitud,
-  ) async {
-    final datos = await obtenerDatosClimaPorUbicacion(latitud, longitud);
-    return datos.pronosticos;
   }
 
   Future<Position> obtenerUbicacionActual() async {
@@ -116,31 +81,13 @@ class ServicioApi {
     LocationPermission permiso = await Geolocator.checkPermission();
     if (permiso == LocationPermission.denied) {
       permiso = await Geolocator.requestPermission();
-      if (permiso == LocationPermission.denied) {
+      if (permiso == LocationPermission.denied ||
+          permiso == LocationPermission.deniedForever) {
         throw Exception('Los permisos de ubicación fueron denegados');
       }
     }
 
-    if (permiso == LocationPermission.deniedForever) {
-      throw Exception(
-        'Los permisos de ubicación están permanentemente denegados.',
-      );
-    }
-
     return await Geolocator.getCurrentPosition();
-  }
-
-  Future<Clima> obtenerClimaPorFecha(
-    double latitud,
-    double longitud,
-    DateTime fecha,
-  ) async {
-    final datos = await obtenerDatosClimaPorUbicacion(latitud, longitud);
-    final climaFecha = datos.obtenerClimaPorFecha(fecha);
-    if (climaFecha == null) {
-      throw Exception('No se encontraron datos para la fecha especificada');
-    }
-    return climaFecha;
   }
 
   Future<List<AlertaMetereologica>> obtenerAlertasMeteorologicas(

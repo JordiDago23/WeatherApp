@@ -17,17 +17,10 @@ class DatosClima {
     return climaPorFecha[fechaNormalizada];
   }
 
-  factory DatosClima.fromJson(
-    Map<String, dynamic> jsonActual,
-    Map<String, dynamic> jsonPronostico,
-  ) {
-    final climaActual = Clima.fromJson(jsonActual);
-    final pronosticos = <Pronostico>[];
-    final climaPorFecha = <DateTime, Clima>{};
-
+  factory DatosClima.fromJson(Map<String, dynamic> jsonPronostico) {
+    // Agrupa los items del pronóstico por día
+    final Map<String, List<dynamic>> pronosticosPorDia = {};
     if (jsonPronostico['list'] != null) {
-      final Map<String, List<dynamic>> pronosticosPorDia = {};
-
       for (var item in jsonPronostico['list']) {
         String fecha = item['dt_txt'].toString().split(' ')[0];
         if (!pronosticosPorDia.containsKey(fecha)) {
@@ -35,7 +28,48 @@ class DatosClima {
         }
         pronosticosPorDia[fecha]!.add(item);
       }
+    }
 
+    // Obtén la fecha de hoy en formato yyyy-MM-dd
+    final hoy = DateTime.now();
+    final hoyStr =
+        '${hoy.year.toString().padLeft(4, '0')}-${hoy.month.toString().padLeft(2, '0')}-${hoy.day.toString().padLeft(2, '0')}';
+    Clima climaActual;
+    if (pronosticosPorDia.containsKey(hoyStr)) {
+      final itemsHoy = pronosticosPorDia[hoyStr]!;
+      final pronosticoHoy = Pronostico.fromDailyForecasts(
+        itemsHoy.cast<Map<String, dynamic>>(),
+      );
+      climaActual = Clima(
+        nombreCiudad: jsonPronostico['city']['name'],
+        temperatura: pronosticoHoy.temperatura,
+        descripcion: pronosticoHoy.descripcion,
+        temperaturaMinima: pronosticoHoy.temperaturaMinima,
+        temperaturaMaxima: pronosticoHoy.temperaturaMaxima,
+        humedad: pronosticoHoy.humedad,
+        velocidadViento: pronosticoHoy.velocidadViento,
+        icono: pronosticoHoy.icono,
+        fecha: pronosticoHoy.fecha,
+      );
+    } else {
+      // Si no hay datos para hoy, usa el primer item disponible
+      final primerItem = jsonPronostico['list'][0];
+      climaActual = Clima(
+        nombreCiudad: jsonPronostico['city']['name'],
+        temperatura: primerItem['main']['temp'].toDouble(),
+        descripcion: primerItem['weather'][0]['description'],
+        temperaturaMinima: primerItem['main']['temp_min'].toDouble(),
+        temperaturaMaxima: primerItem['main']['temp_max'].toDouble(),
+        humedad: primerItem['main']['humidity'],
+        velocidadViento: primerItem['wind']['speed'].toDouble(),
+        icono: primerItem['weather'][0]['icon'],
+        fecha: DateTime.parse(primerItem['dt_txt']),
+      );
+    }
+    final pronosticos = <Pronostico>[];
+    final climaPorFecha = <DateTime, Clima>{};
+
+    if (jsonPronostico['list'] != null) {
       pronosticosPorDia.forEach((fecha, items) {
         if (pronosticos.length < 5) {
           double tempMin = double.infinity;
@@ -74,17 +108,7 @@ class DatosClima {
           if (fechaNormalizada.year == climaActual.fecha.year &&
               fechaNormalizada.month == climaActual.fecha.month &&
               fechaNormalizada.day == climaActual.fecha.day) {
-            climaPorFecha[fechaNormalizada] = Clima(
-              nombreCiudad: climaActual.nombreCiudad,
-              temperatura: climaActual.temperatura,
-              descripcion: climaActual.descripcion,
-              temperaturaMinima: tempMin,
-              temperaturaMaxima: tempMax,
-              humedad: climaActual.humedad,
-              velocidadViento: climaActual.velocidadViento,
-              icono: climaActual.icono,
-              fecha: climaActual.fecha,
-            );
+            climaPorFecha[fechaNormalizada] = climaActual;
           } else {
             climaPorFecha[fechaNormalizada] = Clima(
               nombreCiudad: climaActual.nombreCiudad,
@@ -107,5 +131,24 @@ class DatosClima {
       pronosticos: pronosticos,
       climaPorFecha: climaPorFecha,
     );
+  }
+
+  List<MapEntry<DateTime, double>> obtenerTemperaturasPorHora(
+    DateTime dia,
+    Map<String, dynamic> jsonPronostico,
+  ) {
+    final List<MapEntry<DateTime, double>> temperaturas = [];
+    if (jsonPronostico['list'] != null) {
+      for (var item in jsonPronostico['list']) {
+        final fecha = DateTime.parse(item['dt_txt']);
+        if (fecha.year == dia.year &&
+            fecha.month == dia.month &&
+            fecha.day == dia.day) {
+          final temp = item['main']['temp'].toDouble();
+          temperaturas.add(MapEntry(fecha, temp));
+        }
+      }
+    }
+    return temperaturas;
   }
 }

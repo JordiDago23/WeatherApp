@@ -6,10 +6,11 @@ import 'package:weather_app_jml/models/ciudad_model.dart';
 import 'package:weather_app_jml/models/datos_clima_model.dart';
 import 'package:weather_app_jml/services/servicio_api.dart';
 import 'package:weather_app_jml/services/shared_preferences_service.dart';
-import 'package:weather_app_jml/widgets/clima_actual_card.dart';
+import 'package:weather_app_jml/widgets/clima_card.dart';
 import 'package:weather_app_jml/widgets/buscador_ciudad.dart';
 import 'package:weather_app_jml/screens/alerta_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
+import 'package:weather_app_jml/widgets/pronostico_card.dart';
 import 'package:weather_app_jml/widgets/lista_pronostico.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,12 +25,16 @@ class _EstadoHomeScreen extends State<HomeScreen> {
   final SharedPreferencesService _servicioSharedPreferences =
       SharedPreferencesService();
 
+  final ScrollController _scrollController = ScrollController();
+  final List<GlobalKey> _pronosticoKeys = [];
+
   Clima? _climaActual;
   List<Pronostico> _pronosticos = [];
   List<AlertaMetereologica> _alertas = [];
   List<Ciudad> _ciudadesRecientes = [];
   Pronostico? _pronosticoSeleccionado;
   DatosClima? _datosClima;
+  Map<String, dynamic>? _datosClimaRawPronostico;
 
   bool _estaCargando = false;
   String _error = '';
@@ -63,28 +68,24 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     try {
       final posicion = await _servicioApi.obtenerUbicacionActual();
 
-      final datos = await _servicioApi.obtenerDatosClimaPorUbicacion(
+      final resultado = await _servicioApi.obtenerDatosClimaPorUbicacionConJson(
         posicion.latitude,
         posicion.longitude,
       );
-
-      final alertas = await _servicioApi.obtenerAlertasMeteorologicas(
-        posicion.latitude,
-        posicion.longitude,
-      );
-
-      final climaHoy = datos.obtenerClimaPorFecha(DateTime.now());
+      final respuestaClima = resultado['modelo'] as DatosClima;
+      final datosPronostico =
+          resultado['jsonPronostico'] as Map<String, dynamic>;
 
       setState(() {
-        _datosClima = datos;
-        _climaActual = climaHoy ?? datos.climaActual;
-        _pronosticos = datos.pronosticos;
-        _alertas = alertas;
+        _datosClima = respuestaClima;
+        _climaActual = respuestaClima.climaActual;
+        _pronosticos = respuestaClima.pronosticos;
+        _alertas = [];
         _estaCargando = false;
+        _datosClimaRawPronostico = datosPronostico;
       });
-
       await _servicioSharedPreferences.addCiudadesRecientes(
-        datos.climaActual.nombreCiudad,
+        respuestaClima.climaActual.nombreCiudad,
       );
       await _cargarCiudadesRecientes();
     } catch (e) {
@@ -110,11 +111,11 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         coordenadas['lon']!,
       );
 
-      final climaHoy = datos.obtenerClimaPorFecha(DateTime.now());
+      final climaActual = datos.obtenerClimaPorFecha(DateTime.now());
 
       setState(() {
         _datosClima = datos;
-        _climaActual = climaHoy ?? datos.climaActual;
+        _climaActual = climaActual ?? datos.climaActual;
         _pronosticos = datos.pronosticos;
         _alertas = alertas;
         _estaCargando = false;
@@ -130,40 +131,78 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     }
   }
 
-  void _actualizarClimaConPronostico(Pronostico pronostico) {
-    if (_datosClima == null) return;
-
-    final climaFecha = _datosClima!.obtenerClimaPorFecha(pronostico.fecha);
-    if (climaFecha != null) {
-      setState(() {
+  void _actualizarClimaConPronostico(Pronostico pronostico, int index) async {
+    setState(() {
+      if (_pronosticoSeleccionado == pronostico) {
+        _pronosticoSeleccionado = null;
+      } else {
         _pronosticoSeleccionado = pronostico;
-        _climaActual = climaFecha;
-      });
+      }
+    });
+    if (_pronosticoSeleccionado == pronostico) {
+      final keyContext = _pronosticoKeys[index].currentContext;
+      if (keyContext != null) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        Scrollable.ensureVisible(
+          keyContext,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
     }
   }
 
   Widget _buildClimaActual() {
-    if (_climaActual == null) {
+    if (_datosClima == null || _pronosticos.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
+    final hoy = DateTime.now();
+    final temperaturasPorHora =
+        _datosClimaRawPronostico != null
+            ? _datosClima!.obtenerTemperaturasPorHora(
+              hoy,
+              _datosClimaRawPronostico!,
+            )
+            : <MapEntry<DateTime, double>>[];
+    return ClimaCard(
+      clima: _climaActual!,
+      temperaturasPorHora: temperaturasPorHora,
+    );
+  }
 
-    if (_pronosticoSeleccionado != null) {
-      final pronostico = _pronosticoSeleccionado!;
-      final climaTemporal = Clima(
-        nombreCiudad: _climaActual!.nombreCiudad,
-        temperatura: pronostico.temperatura,
-        descripcion: pronostico.descripcion,
-        temperaturaMinima: _climaActual!.temperaturaMinima,
-        temperaturaMaxima: _climaActual!.temperaturaMaxima,
-        humedad: pronostico.humedad,
-        velocidadViento: pronostico.velocidadViento,
-        icono: pronostico.icono,
-        fecha: pronostico.fecha,
-      );
-      return ClimaActualCard(clima: climaTemporal);
+  Widget _buildPronosticoExpandido() {
+    if (_pronosticoSeleccionado == null || _datosClima == null) {
+      return const SizedBox.shrink();
     }
 
-    return ClimaActualCard(clima: _climaActual!);
+    final pronostico = _pronosticoSeleccionado!;
+    final climaTemporal = Clima(
+      nombreCiudad: _climaActual!.nombreCiudad,
+      temperatura: pronostico.temperatura,
+      descripcion: pronostico.descripcion,
+      temperaturaMinima: pronostico.temperaturaMinima,
+      temperaturaMaxima: pronostico.temperaturaMaxima,
+      humedad: pronostico.humedad,
+      velocidadViento: pronostico.velocidadViento,
+      icono: pronostico.icono,
+      fecha: pronostico.fecha,
+    );
+    final temperaturasPorHora =
+        _datosClimaRawPronostico != null
+            ? _datosClima!.obtenerTemperaturasPorHora(
+              pronostico.fecha,
+              _datosClimaRawPronostico!,
+            )
+            : <MapEntry<DateTime, double>>[];
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        ClimaCard(
+          clima: climaTemporal,
+          temperaturasPorHora: temperaturasPorHora,
+        ),
+      ],
+    );
   }
 
   Widget _buildListaPronosticos() {
@@ -171,9 +210,53 @@ class _EstadoHomeScreen extends State<HomeScreen> {
       return const Center(child: Text('No hay pronósticos disponibles'));
     }
 
-    return ListaPronostico(
-      pronosticos: _pronosticos,
-      onPronosticoSeleccionado: _actualizarClimaConPronostico,
+    final pronosticosFiltrados =
+        _pronosticos.where((pronostico) {
+          final fechaActual = DateTime.now();
+          final fechaPronostico = pronostico.fecha;
+          return !(fechaPronostico.year == fechaActual.year &&
+              fechaPronostico.month == fechaActual.month &&
+              fechaPronostico.day == fechaActual.day);
+        }).toList();
+
+    if (_pronosticoKeys.length != pronosticosFiltrados.length) {
+      _pronosticoKeys.clear();
+      _pronosticoKeys.addAll(
+        List.generate(pronosticosFiltrados.length, (_) => GlobalKey()),
+      );
+    }
+
+    if (pronosticosFiltrados.isEmpty) {
+      return const Center(child: Text('No hay pronósticos disponibles'));
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: pronosticosFiltrados.length,
+      itemBuilder: (context, index) {
+        final pronostico = pronosticosFiltrados[index];
+        return Column(
+          key: _pronosticoKeys[index],
+          children: [
+            PronosticoCard(
+              pronostico: pronostico,
+              onTap: () => _actualizarClimaConPronostico(pronostico, index),
+            ),
+            AnimatedSwitcher(
+              duration: Duration(milliseconds: 300),
+              transitionBuilder:
+                  (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+              child:
+                  _pronosticoSeleccionado == pronostico
+                      ? _buildPronosticoExpandido()
+                      : SizedBox.shrink(),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -378,13 +461,21 @@ class _EstadoHomeScreen extends State<HomeScreen> {
                         ),
                       ],
                       const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Clima actual',
+                          style: theme.textTheme.displaySmall,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       _buildClimaActual(),
                       if (_pronosticos.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Pronóstico de 5 días',
+                            'Pronóstico próximos 4 días',
                             style: theme.textTheme.displaySmall,
                           ),
                         ),

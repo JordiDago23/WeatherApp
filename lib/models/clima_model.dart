@@ -20,18 +20,4 @@ class Clima {
     required this.icono,
     required this.fecha,
   });
-
-  factory Clima.fromJson(Map<String, dynamic> json) {
-    return Clima(
-      nombreCiudad: json['name'],
-      temperatura: json['main']['temp'].toDouble(),
-      descripcion: json['weather'][0]['description'],
-      temperaturaMinima: json['main']['temp_min'].toDouble(),
-      temperaturaMaxima: json['main']['temp_max'].toDouble(),
-      humedad: json['main']['humidity'],
-      velocidadViento: json['wind']['speed'].toDouble(),
-      icono: json['weather'][0]['icon'],
-      fecha: DateTime.now(),
-    );
-  }
 }
