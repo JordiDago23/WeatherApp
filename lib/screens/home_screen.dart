@@ -11,6 +11,7 @@ import 'package:weather_app_jml/widgets/buscador_ciudad.dart';
 import 'package:weather_app_jml/screens/alerta_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
 import 'package:weather_app_jml/widgets/pronostico_card.dart';
+import 'package:weather_app_jml/services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -119,6 +120,17 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         _alertas = alertas;
         _estaCargando = false;
       });
+
+      // Notificaciones para alertas reales
+      for (int i = 0; i < alertas.length; i++) {
+        final alerta = alertas[i];
+        await NotificationService.mostrarNotificacionAlertaMeteorologica(
+          _climaActual?.nombreCiudad ?? ciudad,
+          alerta.evento,
+          alerta.descripcion,
+          id: i + 1,
+        );
+      }
 
       await _servicioSharedPreferences.addCiudadesRecientes(ciudad);
       await _cargarCiudadesRecientes();
@@ -262,6 +274,17 @@ class _EstadoHomeScreen extends State<HomeScreen> {
   void _mostrarAlertas() {
     if (_alertas.isEmpty) {
       final alertasPrueba = AlertaMetereologica.crearAlertasPrueba();
+
+      // Notificaciones para alertas de prueba
+      for (int i = 0; i < alertasPrueba.length; i++) {
+        final alerta = alertasPrueba[i];
+        NotificationService.mostrarNotificacionAlertaMeteorologica(
+          alerta.remitente,
+          alerta.evento,
+          alerta.descripcion,
+          id: i + 1000, // Para evitar colisión con las reales
+        );
+      }
 
       showDialog(
         context: context,

@@ -4,9 +4,16 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:weather_app_jml/screens/home_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
+import 'package:weather_app_jml/services/notification_service.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  await NotificationService.init();
 
   try {
     await dotenv.load(fileName: ".env");
