@@ -12,7 +12,6 @@ import 'package:weather_app_jml/screens/alerta_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
 import 'package:weather_app_jml/widgets/pronostico_card.dart';
 import 'package:weather_app_jml/services/notification_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light);
 
@@ -285,7 +284,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
           alerta.remitente,
           alerta.evento,
           alerta.descripcion,
-          id: i + 1000, // Para evitar colisión con las reales
+          id: i + 1000,
         );
       }
 
