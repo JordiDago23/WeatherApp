@@ -6,6 +6,7 @@ import 'package:weather_app_jml/screens/home_screen.dart';
 import 'package:weather_app_jml/theme/theme_data.dart';
 import 'package:weather_app_jml/services/notification_service.dart';
 import 'package:flutter/services.dart';
+import 'package:weather_app_jml/services/shared_preferences_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,7 @@ void main() async {
   }
 
   await initializeDateFormatting('es');
-  await cargarTemaGuardado();
+  await SharedPreferencesService.cargarTema(themeModeNotifier);
 
   runApp(const MyApp());
 }

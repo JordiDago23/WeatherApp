@@ -16,29 +16,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light);
 
-Future<void> cargarTemaGuardado() async {
-  final prefs = await SharedPreferences.getInstance();
-  final modo = prefs.getString('theme_mode');
-  if (modo == 'dark') {
-    themeModeNotifier.value = ThemeMode.dark;
-  } else if (modo == 'light') {
-    themeModeNotifier.value = ThemeMode.light;
-  } else if (modo == 'system') {
-    themeModeNotifier.value = ThemeMode.system;
-  }
-}
-
-Future<void> guardarTema(ThemeMode mode) async {
-  final prefs = await SharedPreferences.getInstance();
-  if (mode == ThemeMode.dark) {
-    await prefs.setString('theme_mode', 'dark');
-  } else if (mode == ThemeMode.light) {
-    await prefs.setString('theme_mode', 'light');
-  } else {
-    await prefs.setString('theme_mode', 'system');
-  }
-}
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -470,7 +447,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
                   final nuevoModo =
                       mode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
                   themeModeNotifier.value = nuevoModo;
-                  guardarTema(nuevoModo);
+                  SharedPreferencesService.guardarTema(nuevoModo);
                 },
               );
             },
