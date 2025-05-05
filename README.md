@@ -12,8 +12,8 @@ Una aplicación de clima sencilla desarrollada en Flutter, ideal para estudiante
 
 ## Requisitos
 
-- Flutter 3.7.0 o superior
-- Dart 3.0.0 o superior
+- Flutter 3.29.3 o superior
+- Dart 3.7.2 o superior
 - Conexión a Internet
 - Cuenta en OpenWeatherMap para obtener una API key
 
