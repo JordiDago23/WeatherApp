@@ -36,10 +36,6 @@ class ServicioApi {
   }
 
   Future<DatosClima> obtenerDatosClimaPorCiudad(String ciudad) async {
-    if (_cacheDatosClima.containsKey(ciudad)) {
-      return _cacheDatosClima[ciudad]!;
-    }
-
     final coordenadas = await obtenerCoordendasCiudad(ciudad);
     final resultado = await obtenerDatosClimaPorUbicacionConJson(
       coordenadas['lat']!,

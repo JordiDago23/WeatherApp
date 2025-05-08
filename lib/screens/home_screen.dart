@@ -105,9 +105,14 @@ class _EstadoHomeScreen extends State<HomeScreen> {
     });
 
     try {
-      final datos = await _servicioApi.obtenerDatosClimaPorCiudad(ciudad);
-
       final coordenadas = await _servicioApi.obtenerCoordendasCiudad(ciudad);
+      final resultado = await _servicioApi.obtenerDatosClimaPorUbicacionConJson(
+        coordenadas['lat']!,
+        coordenadas['lon']!,
+      );
+      final datos = resultado['modelo'] as DatosClima;
+      final datosPronostico =
+          resultado['jsonPronostico'] as Map<String, dynamic>;
       final alertas = await _servicioApi.obtenerAlertasMeteorologicas(
         coordenadas['lat']!,
         coordenadas['lon']!,
@@ -121,6 +126,7 @@ class _EstadoHomeScreen extends State<HomeScreen> {
         _pronosticos = datos.pronosticos;
         _alertas = alertas;
         _estaCargando = false;
+        _datosClimaRawPronostico = datosPronostico;
       });
 
       // Notificaciones para alertas reales
