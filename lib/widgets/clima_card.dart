@@ -124,14 +124,14 @@ class ClimaCard extends StatelessWidget {
     final maxTemp = datos.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     final int salto = 2;
     final int minY = minTemp.round();
-    final int maxY = (((maxTemp.round()) / salto).ceil()) * salto;
+    final int maxY = (((maxTemp.round() + salto) / salto).ceil()) * salto;
+    final int maxRedondeado = (maxTemp.round() / salto).ceil() * salto;
     List<int> yLabels = [];
 
     int val = minY;
-    yLabels.add(val);
-    val += salto;
     while (val <= maxY) {
       yLabels.add(val);
+      if (val >= maxRedondeado) break;
       val += salto;
     }
     return Padding(
