@@ -134,22 +134,6 @@ class ClimaCard extends StatelessWidget {
       yLabels.add(val);
       val += salto;
     }
-    List<int> labelIndices = [];
-    if (datos.length <= 6) {
-      for (int i = 0; i < datos.length; i++) {
-        labelIndices.add(i);
-      }
-    } else {
-      labelIndices.add(0);
-      for (int i = 1; i < datos.length - 1; i++) {
-        final hora = datos[i].key.hour;
-        if (hora % 3 == 0) {
-          labelIndices.add(i);
-        }
-      }
-      labelIndices.add(datos.length - 1);
-      labelIndices = labelIndices.toSet().toList()..sort();
-    }
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 30, top: 8),
       child: SizedBox(
@@ -182,21 +166,26 @@ class ClimaCard extends StatelessWidget {
                   reservedSize: 30,
                   getTitlesWidget: (value, meta) {
                     int idx = value.toInt();
-                    if (labelIndices.contains(idx)) {
+                    if (idx >= 0 && idx < datos.length) {
                       final hora = datos[idx].key.hour.toString().padLeft(
+                        2,
+                        '0',
+                      );
+                      final minuto = datos[idx].key.minute.toString().padLeft(
                         2,
                         '0',
                       );
                       return Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: Text(
-                          '$hora:00',
+                          '$hora:$minuto',
                           style: const TextStyle(fontSize: 12),
                         ),
                       );
                     }
                     return const SizedBox.shrink();
                   },
+                  interval: 1,
                 ),
               ),
               rightTitles: AxisTitles(
