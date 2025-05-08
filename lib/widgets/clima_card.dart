@@ -18,6 +18,18 @@ class ClimaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Si hay datos horarios, usamos esos para la mínima y máxima
+    double? minTempGrafica;
+    double? maxTempGrafica;
+    if (temperaturasPorHora.isNotEmpty) {
+      minTempGrafica = temperaturasPorHora
+          .map((e) => e.value)
+          .reduce((a, b) => a < b ? a : b);
+      maxTempGrafica = temperaturasPorHora
+          .map((e) => e.value)
+          .reduce((a, b) => a > b ? a : b);
+    }
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -60,13 +72,13 @@ class ClimaCard extends StatelessWidget {
               children: [
                 _buildInfoClima(
                   Icons.arrow_downward,
-                  '${clima.temperaturaMinima.round()}°C',
+                  '${(minTempGrafica ?? clima.temperaturaMinima).round()}°C',
                   'Mínima',
                   AppTheme.temperaturaBajaColor,
                 ),
                 _buildInfoClima(
                   Icons.arrow_upward,
-                  '${clima.temperaturaMaxima.round()}°C',
+                  '${(maxTempGrafica ?? clima.temperaturaMaxima).round()}°C',
                   'Máxima',
                   AppTheme.temperaturaAltaColor,
                 ),
